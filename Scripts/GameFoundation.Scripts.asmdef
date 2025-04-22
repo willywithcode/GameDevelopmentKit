@@ -1,0 +1,11 @@
+{
+  "name": "GameFoundation.Scripts",
+  "references": [
+    "VContainer",
+    "UniTask",
+    "UniTask.Linq",
+    "Unity.Addressables",
+    "Unity.ResourceManager",
+    "Animancer"
+  ]
+}
