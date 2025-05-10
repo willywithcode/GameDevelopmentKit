@@ -10,6 +10,7 @@ namespace GameFoundation.Scripts.Extenstions
         public static async UniTask ToUniTask(this AnimancerState animancerState, CancellationToken cancellationToken = default)
         {
             await UniTask.WaitUntil(() => animancerState.IsStopped, cancellationToken: cancellationToken);
+            
         }
     }
 }
