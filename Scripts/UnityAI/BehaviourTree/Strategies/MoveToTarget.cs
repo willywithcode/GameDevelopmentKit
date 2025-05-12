@@ -27,7 +27,7 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree.Strategies
 
             this.agent.SetDestination(this.target.position);
             this.agent.speed = this.speed;
-            this.entity.LookAt(this.target.position.With(y: this.entity.position.y));
+            this.entity.LookAt(this.agent.nextPosition.With(y: this.entity.position.y));
 
             if (this.agent.pathPending) this.isPathCalculated = true;
             return Node.Status.Running;
