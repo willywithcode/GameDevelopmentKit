@@ -2,10 +2,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
 {
     using System;
     using System.Collections.Generic;
+    using GameFoundation.Scripts.Extenstions;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.View;
     using UnityEngine;
     using VContainer;
+    using ZLinq;
 
     public class ScreenManager : IScreenManager
     {
@@ -38,7 +40,16 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
                 presenter = this.resolver.Resolve(presenterType) as IPresenter;
 
                 if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-                if (presenter is BasePresenter<BaseView> basePresenter) basePresenter.SetParent(this.parentTransform);
+                var isBasePresenter = presenter.GetType().GetBaseTypes()
+                    .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(BasePresenter<>));
+                if (isBasePresenter)
+                {
+                    var setParentMethod = presenter.GetType().GetMethod("SetParent", new[] { typeof(Transform) });
+                    if (setParentMethod != null)
+                    {
+                        setParentMethod.Invoke(presenter, new object[] { this.parentTransform });
+                    }
+                }
 
                 this.presenters[presenterType] = presenter;
             }
@@ -53,11 +64,25 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
                 presenter = this.resolver.Resolve(presenterType) as IPresenter;
 
                 if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-                if (presenter is BasePresenter<BaseView> basePresenter) basePresenter.SetParent(this.parentTransform);
+                var isBasePresenter = presenter.GetType().GetBaseTypes()
+                    .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(BasePresenter<>));
+                if (isBasePresenter)
+                {
+                    var setParentMethod = presenter.GetType().GetMethod("SetParent", new[] { typeof(Transform) });
+                    if (setParentMethod != null)
+                    {
+                        setParentMethod.Invoke(presenter, new object[] { this.parentTransform });
+                    }
+                }
 
                 this.presenters[presenterType] = presenter;
             }
-            if (presenter is BasePresenter<BaseView, TModel> modelPresenter) modelPresenter.SetModel(model);
+            
+            var setModelMethod = presenter.GetType().GetMethod("SetModel", new[] { typeof(TModel) });
+            if (setModelMethod != null)
+            {
+                setModelMethod.Invoke(presenter, new object[] { model });
+            }
             presenter.Open();
         }
 

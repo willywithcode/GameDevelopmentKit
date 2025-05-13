@@ -1,6 +1,7 @@
 namespace GameFoundation.Scripts.Extenstions
 {
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
     using ZLinq;
 
@@ -20,6 +21,16 @@ namespace GameFoundation.Scripts.Extenstions
                 .AsValueEnumerable()
                 .Where(t => t.GetInterfaces().AsValueEnumerable().Contains(interfaceType) && !t.IsAbstract)
                 .ToArray();
+        }
+
+        public static IEnumerable<Type> GetBaseTypes(this Type type)
+        {
+            var currentType = type.BaseType;
+            while (currentType != null)
+            {
+                yield return currentType;
+                currentType = currentType.BaseType;
+            }
         }
     }
 }

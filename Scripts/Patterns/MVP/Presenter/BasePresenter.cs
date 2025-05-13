@@ -38,7 +38,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         public virtual void Open()
         {
-            if (this.view == null) this.view = this.viewFactory.CreateView<TView>(this.parentTransform);
+            this.Bind();
+            if (this.view == null)
+            {
+                this.view = this.viewFactory.CreateView<TView>(this.parentTransform);
+                this.Ready();
+            }
             this.signalBus.Fire(new OpenPresenterSignal(this));
             this.OnBeforeShow();
             this.view.Show();
@@ -53,6 +58,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             this.OnAfterHide();
         }
 
+        protected virtual void Bind()         { }
+        protected virtual void Ready()        { }
         protected virtual void OnBeforeShow() { }
         protected virtual void OnAfterShow()  { }
         protected virtual void OnBeforeHide() { }
