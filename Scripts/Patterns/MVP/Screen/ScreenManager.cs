@@ -77,7 +77,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
 
                 this.presenters[presenterType] = presenter;
             }
-            
+
             var setModelMethod = presenter.GetType().GetMethod("SetModel", new[] { typeof(TModel) });
             if (setModelMethod != null)
             {
@@ -94,6 +94,14 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
                 presenter.Close();
             else
                 Debug.LogWarning($"Attempting to hide screen {presenterType.Name} that was not shown.");
+        }
+
+        public void HideAllScreens()
+        {
+            foreach (var presenter in this.presenters.Values)
+            {
+                presenter.Close();
+            }
         }
 
         public void DestroyScreen<T>() where T : IPresenter

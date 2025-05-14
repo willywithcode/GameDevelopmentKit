@@ -8,6 +8,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
         void ShowScreen<T>() where T : IPresenter;
         void ShowScreen<T, TModel>(TModel model) where T : IPresenter;
         void HideScreen<T>() where T : IPresenter;
+        void HideAllScreens();
         void SetScreenParent(Transform parent);
     }
 }
