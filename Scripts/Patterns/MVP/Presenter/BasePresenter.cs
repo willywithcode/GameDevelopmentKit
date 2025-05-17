@@ -38,12 +38,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         public virtual void Open()
         {
-            this.Bind();
             if (this.view == null)
             {
                 this.view = this.viewFactory.CreateView<TView>(this.parentTransform);
                 this.Ready();
             }
+            this.Bind();
             this.signalBus.Fire(new OpenPresenterSignal(this));
             this.OnBeforeShow();
             this.view.Show();
