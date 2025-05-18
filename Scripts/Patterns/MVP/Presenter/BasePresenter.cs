@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 {
+    using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
     using GameFoundation.Scripts.Patterns.SignalBus;
@@ -58,12 +59,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             this.OnAfterHide();
         }
 
-        protected virtual void Bind()         { }
-        protected virtual void Ready()        { }
-        protected virtual void OnBeforeShow() { }
-        protected virtual void OnAfterShow()  { }
-        protected virtual void OnBeforeHide() { }
-        protected virtual void OnAfterHide()  { }
+        protected virtual       void    Bind()         { }
+        protected virtual       void    Ready()        { }
+        protected virtual async UniTask OnBeforeShow() { }
+        protected virtual async UniTask OnAfterShow()  { }
+        protected virtual async UniTask OnBeforeHide() { }
+        protected virtual async UniTask OnAfterHide()  { }
 
         public void DestroyView()
         {

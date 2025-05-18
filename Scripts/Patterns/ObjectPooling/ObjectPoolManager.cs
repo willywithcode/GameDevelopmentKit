@@ -81,5 +81,14 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
                 obj.GetComponent<IPoolable>().OnDespawn().Forget();
             }
         }
+
+        public bool IsInitialized(string key) 
+        {
+            if (this.pools.ContainsKey(key))
+            {
+                return this.pools[key].elements.Count > 0;
+            }
+            return false;
+        }
     }
 }
