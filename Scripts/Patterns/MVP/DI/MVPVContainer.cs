@@ -55,7 +55,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.DI
                     if (Attribute.GetCustomAttribute(presenterType, typeof(PresenterAttribute)) is PresenterAttribute attribute)
                     {
                         var lifetime = attribute.IsSingleton ? Lifetime.Singleton : Lifetime.Transient;
-                        builder.Register(presenterType, lifetime);
+                        builder.Register(presenterType, lifetime).AsSelf().AsImplementedInterfaces();
 
                         if (attribute.AutoInit)
                         {
@@ -66,7 +66,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.DI
                     }
                     else
                     {
-                        builder.Register(presenterType, Lifetime.Transient);
+                        builder.Register(presenterType, Lifetime.Transient).AsSelf().AsImplementedInterfaces();
                         Debug.Log($"Registered presenter: {presenterType.Name}");
                     }
                 }
