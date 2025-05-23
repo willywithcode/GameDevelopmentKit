@@ -7,7 +7,7 @@ namespace GameFoundation.Scripts.Addressable
 
     public class AssetsManager : IAssetsManager
     {
-        private Dictionary<string, object> caches = new();
+        private readonly Dictionary<string, object> caches = new();
 
         public T LoadAsset<T>(string key) where T : Object
         {

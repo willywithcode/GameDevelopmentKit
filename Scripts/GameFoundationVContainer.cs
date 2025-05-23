@@ -1,6 +1,7 @@
 namespace GameFoundation.Scripts
 {
     using GameFoundation.Scripts.Addressable;
+    using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.LocalData.DI;
     using GameFoundation.Scripts.Patterns.MVP.DI;
     using GameFoundation.Scripts.Patterns.ObjectPooling;
@@ -18,6 +19,7 @@ namespace GameFoundation.Scripts
             builder.Register<ObjectPoolManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.Register<SignalBus>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.RegisterMVP();
+            builder.RegisterAudio();
             builder.RegisterLocalData();
             #if STATE_MACHINE
             builder.RegisterStateMachine();

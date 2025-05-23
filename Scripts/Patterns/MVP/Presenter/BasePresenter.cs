@@ -4,7 +4,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
     using GameFoundation.Scripts.Patterns.SignalBus;
+    using GameFoundation.Scripts.Signals;
     using UnityEngine;
+    using UnityEngine.UI;
 
     public abstract class BasePresenter<TView> : IPresenter where TView : BaseView
     {
@@ -59,12 +61,29 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             this.OnAfterHide();
         }
 
-        protected virtual       void    Bind()         { }
-        protected virtual       void    Ready()        { }
+        protected virtual void Bind() { }
+
+        protected virtual void Ready()
+        {
+            this.AssignButtonClickEffect();
+        }
+
         protected virtual async UniTask OnBeforeShow() { }
         protected virtual async UniTask OnAfterShow()  { }
         protected virtual async UniTask OnBeforeHide() { }
         protected virtual async UniTask OnAfterHide()  { }
+
+        private void AssignButtonClickEffect()
+        {
+            var buttons = this.view.GetComponentsInChildren<Button>(true);
+            foreach (var button in buttons)
+            {
+                button.onClick.AddListener(() =>
+                {
+                    this.signalBus.Fire<OnButtonClickSignal>(new());
+                });
+            }
+        }
 
         public void DestroyView()
         {

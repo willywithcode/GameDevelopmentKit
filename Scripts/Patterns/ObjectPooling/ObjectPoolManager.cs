@@ -82,13 +82,31 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             }
         }
 
-        public bool IsInitialized(string key) 
+        public bool IsInitialized(string key)
         {
             if (this.pools.ContainsKey(key))
             {
                 return this.pools[key].elements.Count > 0;
             }
             return false;
+        }
+
+        public List<T> GetAll<T>(string key)
+        {
+            if (this.pools.ContainsKey(key))
+            {
+                var list = new List<T>();
+                foreach (var obj in this.pools[key].elements)
+                {
+                    if (obj.activeSelf)
+                    {
+                        list.Add(obj.GetComponent<T>());
+                    }
+                }
+                return list;
+            }
+            Debug.LogError("Pooler not found" + key);
+            return new List<T>();
         }
     }
 }
