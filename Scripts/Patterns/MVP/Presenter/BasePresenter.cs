@@ -10,8 +10,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     {
         #region Inject
 
-        protected        IViewFactory viewFactory;
-        private readonly SignalBus    signalBus;
+        protected readonly IViewFactory viewFactory;
+        protected readonly SignalBus    signalBus;
 
         protected BasePresenter(
             IViewFactory viewFactory,
