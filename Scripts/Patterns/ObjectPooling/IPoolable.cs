@@ -6,6 +6,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
     public interface IPoolable
     {
         public string    key { get; set; }
+        public UniTask   OnInstantiate();
         public UniTask   OnSpawn();
         public UniTask   OnDespawn();
         public Transform tf { get; }

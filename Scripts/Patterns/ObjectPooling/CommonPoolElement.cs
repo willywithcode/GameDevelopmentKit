@@ -7,6 +7,11 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
     {
         public string key { get; set; }
 
+        public virtual UniTask OnInstantiate()
+        {
+            return UniTask.CompletedTask;
+        }
+
         public virtual UniTask OnSpawn()
         {
             return UniTask.CompletedTask;

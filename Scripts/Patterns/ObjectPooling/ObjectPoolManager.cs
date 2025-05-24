@@ -41,6 +41,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             {
                 var instance = Object.Instantiate(pooler, this.pools[key].parent);
                 instance.GetComponent<T>().key = key;
+                instance.GetComponent<T>().OnInstantiate();
                 var objInstance = instance.gameObject;
                 objInstance.SetActive(false);
                 this.pools[key].elements.Add(objInstance);
@@ -51,7 +52,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
         {
             if (!this.pools.ContainsKey(key)) this.CreatePool<T>(key);
             var inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
-            if (!inactiveObjs.Any()) this.CreatePool<T>(key);
+            if (!inactiveObjs.Any()) this.CreatePool<T>(key, 1);
             inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
             var obj = inactiveObjs.First();
             obj.SetActive(true);
