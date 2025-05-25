@@ -30,8 +30,9 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
 
         #endregion
 
-        private          SoundEmitter                    musicSource;
-        private readonly Queue<(string id, bool isLoop)> musicQueue = new();
+        private          SoundEmitter                     musicSource;
+        private          Dictionary<string, SoundEmitter> sfxLoopEmitters = new();
+        private readonly Queue<(string id, bool isLoop)>  musicQueue      = new();
 
         public void Initialize()
         {
@@ -41,6 +42,10 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         public void PlaySfx(string audioId, bool isLoop = false)
         {
             var soundEmitter = this.objectPooling.Spawn<SoundEmitter>("SoundEmitter");
+            if (isLoop)
+            {
+                this.sfxLoopEmitters.Add(audioId, soundEmitter);
+            }
             soundEmitter.SetAudioClip(this.assetsManager.LoadAsset<AudioClip>(audioId))
                 .SetLoop(isLoop)
                 .SetMute(this.soundLocalDataService.IsSfxMute)
@@ -83,6 +88,20 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
                 this.musicSource.SetOnPlayComplete(null);
             }
             this.musicQueue.Clear();
+        }
+
+        public void StopSfx(string audioId)
+        {
+            if (this.sfxLoopEmitters.TryGetValue(audioId, out var emitter))
+            {
+                emitter.Stop();
+                this.objectPooling.Despawn(emitter);
+                this.sfxLoopEmitters.Remove(audioId);
+            }
+            else
+            {
+                Debug.LogWarning($"SFX with ID {audioId} is not currently playing or does not exist.");
+            }
         }
 
         public void MuteSfx(bool isMute)
