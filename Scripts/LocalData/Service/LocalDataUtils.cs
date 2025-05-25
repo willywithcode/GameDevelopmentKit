@@ -1,7 +1,7 @@
 namespace GameFoundation.Scripts.LocalData.Service
 {
     using System;
-    using Unity.Plastic.Newtonsoft.Json;
+    using Newtonsoft.Json;
     using UnityEngine;
 
     public static class LocalDataUtils
