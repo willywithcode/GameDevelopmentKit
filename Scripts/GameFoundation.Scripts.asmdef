@@ -6,6 +6,7 @@
     "UniTask.Linq",
     "Unity.Addressables",
     "Unity.ResourceManager",
-    "Animancer"
+    "Animancer",
+    "Lofelt.NiceVibrations"
   ]
 }

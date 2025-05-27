@@ -2,6 +2,7 @@ namespace GameFoundation.Scripts
 {
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
+    using GameFoundation.Scripts.Features.Vibration.DI;
     using GameFoundation.Scripts.LocalData.DI;
     using GameFoundation.Scripts.Patterns.MVP.DI;
     using GameFoundation.Scripts.Patterns.ObjectPooling;
@@ -21,6 +22,7 @@ namespace GameFoundation.Scripts
             builder.RegisterMVP();
             builder.RegisterAudio();
             builder.RegisterLocalData();
+            builder.RegisterVibration();
             #if STATE_MACHINE
             builder.RegisterStateMachine();
             #endif
