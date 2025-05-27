@@ -10,5 +10,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         public void MuteMusic(bool isMute);
         public bool IsSfxOn();
         public bool IsMusicOn();
+        public void SetSfxVolume(float volume);
+        public void SetMusicVolume(float volume);
     }
 }

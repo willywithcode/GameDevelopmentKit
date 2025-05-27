@@ -33,6 +33,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         private          SoundEmitter                     musicSource;
         private          Dictionary<string, SoundEmitter> sfxLoopEmitters = new();
         private readonly Queue<(string id, bool isLoop)>  musicQueue      = new();
+        private          float                            sfxVolume       = .75f;
 
         public void Initialize()
         {
@@ -49,6 +50,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             soundEmitter.SetAudioClip(this.assetsManager.LoadAsset<AudioClip>(audioId))
                 .SetLoop(isLoop)
                 .SetMute(this.soundLocalDataService.IsSfxMute)
+                .SetVolume(this.soundLocalDataService.IsSfxMute ? 0 : this.sfxVolume)
                 .SetOnPlayComplete(() => this.objectPooling.Despawn(soundEmitter))
                 .Play().Forget();
         }
@@ -121,5 +123,22 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         public bool IsSfxOn() => !this.soundLocalDataService.IsSfxMute;
 
         public bool IsMusicOn() => !this.soundLocalDataService.IsMusicMute;
+
+        public void SetSfxVolume(float volume)
+        {
+            foreach (var emitter in this.sfxLoopEmitters.Values)
+            {
+                emitter.SetVolume(volume);
+            }
+            this.sfxVolume = volume;
+        }
+
+        public void SetMusicVolume(float volume)
+        {
+            if (this.musicSource != null)
+            {
+                this.musicSource.SetVolume(volume);
+            }
+        }
     }
 }
