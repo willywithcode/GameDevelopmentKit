@@ -23,7 +23,7 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree.Strategies
 
         public Node.Status Process()
         {
-            if (Vector3.Distance(this.entity.position, this.target.position) < 0.01f) return Node.Status.Success;
+            if (Vector3.Distance(this.entity.position, this.target.position) < 0.5f) return Node.Status.Success;
 
             this.agent.SetDestination(this.target.position);
             this.agent.speed = this.speed;
