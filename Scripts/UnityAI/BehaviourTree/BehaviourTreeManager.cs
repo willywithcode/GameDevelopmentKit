@@ -6,6 +6,7 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree
     using Cysharp.Threading.Tasks;
     using Cysharp.Threading.Tasks.Linq;
     using GameFoundation.Scripts.UnityAI.BehaviourTree.Nodes;
+    using UnityEngine;
     using VContainer.Unity;
 
     public class BehaviourTreeManager : IBehaviourTreeManager, ITickable
@@ -76,7 +77,15 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree
             foreach (var tree in this.behaviourTrees)
             {
                 if (!tree.Value.isRunning) continue;
-                tree.Value.behaviourTree.Process();
+                try
+                {
+                    tree.Value.behaviourTree.Process();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Error processing behaviour tree {tree.Key}: {e.Message}");
+                    throw;
+                }
             }
         }
     }
