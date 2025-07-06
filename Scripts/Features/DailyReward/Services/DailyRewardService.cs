@@ -37,6 +37,7 @@ namespace GameFoundation.Scripts.Features.DailyReward.Services
             this.dailyRewardBlueprint = this.assetsManager.LoadAsset<DailyRewardBlueprint>("DailyRewardBlueprint");
         }
 
+        public int GetCurrentDay()         => this.dailyRewardLocalDataService.LastRewardIndex + 1;
         public int GetCurrentRewardIndex() => (this.dailyRewardLocalDataService.LastRewardIndex + 1) % this.dailyRewardBlueprint.rewards.Length;
 
         public List<DailyRewardData> GetDailyRewardData() => this.dailyRewardBlueprint.rewards.AsValueEnumerable().ToList();
@@ -46,8 +47,8 @@ namespace GameFoundation.Scripts.Features.DailyReward.Services
         public void ClaimReward()
         {
             this.dailyRewardLocalDataService.SetLastRewardDate();
-            this.dailyRewardLocalDataService.LastRewardIndex = (this.dailyRewardLocalDataService.LastRewardIndex + 1) % this.dailyRewardBlueprint.rewards.Length;
-            var reward = this.dailyRewardBlueprint.rewards[this.dailyRewardLocalDataService.LastRewardIndex];
+            this.dailyRewardLocalDataService.LastRewardIndex = this.dailyRewardLocalDataService.LastRewardIndex + 1;
+            var reward = this.dailyRewardBlueprint.rewards[this.dailyRewardLocalDataService.LastRewardIndex % this.dailyRewardBlueprint.rewards.Length];
             this.inventoryService.AddItem(reward.rewardName, reward.rewardAmount);
         }
     }
