@@ -5,28 +5,33 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
     using GameFoundation.Scripts.Features.Inventory.Blueprints;
     using GameFoundation.Scripts.Features.Inventory.LocalDatas.Models;
     using GameFoundation.Scripts.Features.Inventory.Signals;
+    using GameFoundation.Scripts.Features.UserExperience.Services;
     using GameFoundation.Scripts.LocalData.Service;
     using GameFoundation.Scripts.Patterns.SignalBus;
     using VContainer.Unity;
 
     public class InventoryLocalDataService : BaseLocalDataService<InventoryLocalData>, IInitializable
     {
-        private readonly IAssetsManager assetsManager;
-        private readonly SignalBus      signalBus;
+        private readonly IAssetsManager        assetsManager;
+        private readonly UserExperienceService userExperienceService;
+        private readonly SignalBus             signalBus;
 
         public InventoryLocalDataService(
-            IAssetsManager assetsManager,
-            SignalBus      signalBus
+            IAssetsManager        assetsManager,
+            SignalBus             signalBus,
+            UserExperienceService userExperienceService
         )
         {
-            this.assetsManager = assetsManager;
-            this.signalBus     = signalBus;
+            this.assetsManager         = assetsManager;
+            this.userExperienceService = userExperienceService;
+            this.signalBus             = signalBus;
         }
 
         private InventoryDefault inventoryDefault;
 
         public void Initialize()
         {
+            if (this.userExperienceService.GetTimePlayed() > 0) return;
             this.inventoryDefault = this.assetsManager.LoadAsset<InventoryDefault>("InventoryDefault");
             foreach (var item in this.inventoryDefault.InventoryItems)
             {

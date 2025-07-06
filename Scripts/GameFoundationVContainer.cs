@@ -2,6 +2,8 @@ namespace GameFoundation.Scripts
 {
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
+    using GameFoundation.Scripts.Features.InternetChecking.DI;
+    using GameFoundation.Scripts.Features.UserExperience.DI;
     using GameFoundation.Scripts.Features.Vibration.DI;
     using GameFoundation.Scripts.LocalData.DI;
     using GameFoundation.Scripts.Patterns.MVP.DI;
@@ -23,6 +25,8 @@ namespace GameFoundation.Scripts
             builder.RegisterAudio();
             builder.RegisterLocalData();
             builder.RegisterVibration();
+            builder.RegisterInternetChecking();
+            builder.RegisterUserExperience();
             #if STATE_MACHINE
             builder.RegisterStateMachine();
             #endif
