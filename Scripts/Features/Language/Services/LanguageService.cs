@@ -32,7 +32,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
 
         public List<string> GetAvailableLanguages()
         {
-            return this.languageBlueprint.Languages.AsValueEnumerable().ToList();
+            return this.languageBlueprint.languages.AsValueEnumerable().ToList();
         }
 
         public string GetCurrentLanguage()
@@ -48,6 +48,20 @@ namespace GameFoundation.Scripts.Features.Language.Services
             }
             this.languageLocalDataService.CurrentLanguage = language;
             this.signalBus.Fire(new OnLanguageChange(language));
+        }
+
+        public bool TryGetTranslation(string key, out string translation)
+        {
+            var languageData = this.languageBlueprint.LanguageDatas.AsValueEnumerable()
+                .FirstOrDefault(data => data.languageName == this.GetCurrentLanguage());
+            if (languageData is null) languageData = this.languageBlueprint.defaultLanguageData;
+            if (languageData != null && languageData.translations.TryGetValue(key, out translation))
+            {
+                return true;
+            }
+
+            translation = null;
+            return false;
         }
     }
 }

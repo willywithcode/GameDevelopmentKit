@@ -7,6 +7,8 @@
     "Unity.Addressables",
     "Unity.ResourceManager",
     "Animancer",
-    "Lofelt.NiceVibrations"
+    "Lofelt.NiceVibrations",
+    "Unity.TextMeshPro",
+    "GameFoundation.Scripts.DI"
   ]
 }

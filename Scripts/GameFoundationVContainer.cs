@@ -10,6 +10,9 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Patterns.ObjectPooling;
     using GameFoundation.Scripts.Patterns.SignalBus;
     using VContainer;
+    #if MULTILANGUAGE
+    using GameFoundation.Scripts.Features.Language.DI;
+    #endif
     #if STATE_MACHINE
     using GameFoundation.Scripts.Patterns.StateMachine.DI;
     #endif
@@ -29,6 +32,9 @@ namespace GameFoundation.Scripts
             builder.RegisterUserExperience();
             #if STATE_MACHINE
             builder.RegisterStateMachine();
+            #endif
+            #if MULTILANGUAGE
+            builder.RegisterLanguage();
             #endif
         }
     }

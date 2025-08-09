@@ -1,7 +1,6 @@
 {
   "name": "GameFoundation.Scripts.DI",
   "references": [
-    "GameFoundation.Scripts",
     "VContainer",
     "Animancer"
   ]
