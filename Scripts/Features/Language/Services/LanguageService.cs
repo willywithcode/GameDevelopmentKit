@@ -1,11 +1,10 @@
 namespace GameFoundation.Scripts.Features.Language.Services
 {
-    using System;
-    using System.Collections.Generic;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.Language.Blueprints;
     using GameFoundation.Scripts.Features.Language.LocalDatas;
     using GameFoundation.Scripts.Features.Language.Signals;
+    using GameFoundation.Scripts.Features.UserExperience.Services;
     using GameFoundation.Scripts.Patterns.SignalBus;
     using ZLinq;
 
@@ -15,37 +14,35 @@ namespace GameFoundation.Scripts.Features.Language.Services
 
         private readonly LanguageLocalDataService languageLocalDataService;
         private readonly SignalBus                signalBus;
+        private readonly UserExperienceService    userExperienceService;
         private readonly LanguageBlueprint        languageBlueprint;
 
         public LanguageService(
             LanguageLocalDataService languageLocalDataService,
             IAssetsManager           assetsManager,
-            SignalBus                signalBus
+            SignalBus                signalBus,
+            UserExperienceService    userExperienceService
         )
         {
             this.languageLocalDataService = languageLocalDataService;
             this.signalBus                = signalBus;
+            this.userExperienceService    = userExperienceService;
             this.languageBlueprint        = assetsManager.LoadAsset<LanguageBlueprint>("LanguageBlueprint");
         }
 
         #endregion
 
-        public List<string> GetAvailableLanguages()
-        {
-            return this.languageBlueprint.languages.AsValueEnumerable().ToList();
-        }
-
         public string GetCurrentLanguage()
         {
+            if (this.userExperienceService.GetTimePlayed() <= 0)
+            {
+                this.languageLocalDataService.CurrentLanguage = this.languageBlueprint.initLanguage;
+            }
             return this.languageLocalDataService.CurrentLanguage;
         }
 
         public void SetLanguage(string language)
         {
-            if (!this.GetAvailableLanguages().Contains(language))
-            {
-                throw new ArgumentException($"Language '{language}' is not available.");
-            }
             this.languageLocalDataService.CurrentLanguage = language;
             this.signalBus.Fire(new OnLanguageChange(language));
         }

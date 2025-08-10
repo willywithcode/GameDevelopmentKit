@@ -1,7 +1,7 @@
 namespace GameFoundation.Scripts.Features.Language.Blueprints
 {
+    using System.Collections;
     using System.Collections.Generic;
-    using System.Linq;
     using GameFoundation.Scripts.Features.Language.Editor;
     using Sirenix.OdinInspector;
     using UnityEngine;
@@ -9,15 +9,18 @@ namespace GameFoundation.Scripts.Features.Language.Blueprints
     [CreateAssetMenu(fileName = "LanguageBlueprint", menuName = "HyperCasual/Language/LanguageBlueprint")]
     public class LanguageBlueprint : ScriptableObject
     {
-        public List<string>       languages;
+        #if UNITY_EDITOR
+        [ValueDropdown(nameof(ShowListLanguage), IsUniqueList = true)]
+        #endif
+        public string initLanguage;
+
         public LanguageData       defaultLanguageData;
         public List<LanguageData> LanguageDatas;
+
         #if UNITY_EDITOR
-        [Button]
-        public void SyncGlobalConfig()
+        private IEnumerable ShowListLanguage()
         {
-            this.languages.Clear();
-            this.languages = LanguageGlobalConfig.Instance.Languages.ToList();
+            return LanguageGlobalConfig.Instance.Languages;
         }
         #endif
     }

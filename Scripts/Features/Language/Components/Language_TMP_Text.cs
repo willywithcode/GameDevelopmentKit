@@ -45,5 +45,18 @@ namespace GameFoundation.Scripts.Features.Language.Components
         }
 
         [SerializeField] private string key;
+
+        public string Key
+        {
+            get => this.key;
+            set
+            {
+                this.key = value;
+                if (this.languageService.TryGetTranslation(this.key, out var translation))
+                {
+                    this.text = translation;
+                }
+            }
+        }
     }
 }
