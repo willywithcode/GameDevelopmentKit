@@ -24,6 +24,7 @@ namespace GameFoundation.Scripts.Features.Language.Components
         {
             return LanguageGlobalConfig.Instance.Languages;
         }
+
         [OnInspectorGUI]
         private void OnInspectorGUI()
         {
@@ -42,6 +43,10 @@ namespace GameFoundation.Scripts.Features.Language.Components
 
         protected void Start()
         {
+            if (this.languageButton == null)
+            {
+                this.languageButton = this.GetComponent<Button>();
+            }
             this.languageButton.onClick.AddListener(this.OnButtonClick);
         }
 

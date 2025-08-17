@@ -4,35 +4,47 @@ namespace GameFoundation.Scripts.Features.Language.Components
     using GameFoundation.Scripts.Features.Language.Services;
     using GameFoundation.Scripts.Features.Language.Signals;
     using GameFoundation.Scripts.Patterns.SignalBus;
+    using Sirenix.OdinInspector;
     using TMPro;
     using UnityEngine;
     using VContainer;
 
-    public class Language_TMP_Text : TextMeshProUGUI
+    public class Language_TMP_Text : MonoBehaviour
     {
-        private LanguageService languageService;
-        private SignalBus       signalBus;
+        private                  LanguageService languageService;
+        private                  SignalBus       signalBus;
+        [SerializeField] private TMP_Text        textMeshPro;
 
-        protected override void Awake()
+        [OnInspectorGUI]
+        private void OnInspectorGUI()
         {
-            base.Awake();
+            if (this.textMeshPro == null)
+            {
+                this.textMeshPro = this.GetComponent<TMP_Text>();
+            }
+        }
+
+        protected void Awake()
+        {
             this.languageService = this.GetCurrentContainer().Resolve<LanguageService>();
             this.signalBus       = this.GetCurrentContainer().Resolve<SignalBus>();
         }
 
-        protected override void Start()
+        protected void Start()
         {
-            base.Start();
+            if (this.textMeshPro == null)
+            {
+                this.textMeshPro = this.GetComponent<TMP_Text>();
+            }
             this.signalBus.Subscribe<OnLanguageChange>(this.OnLanguageChange);
             if (this.languageService.TryGetTranslation(this.key, out var translation))
             {
-                this.text = translation;
+                this.textMeshPro.text = translation;
             }
         }
 
-        protected override void OnDestroy()
+        protected void OnDestroy()
         {
-            base.OnDestroy();
             this.signalBus.Unsubscribe<OnLanguageChange>(this.OnLanguageChange);
         }
 
@@ -40,7 +52,7 @@ namespace GameFoundation.Scripts.Features.Language.Components
         {
             if (this.languageService.TryGetTranslation(this.key, out var translation))
             {
-                this.text = translation;
+                this.textMeshPro.text = translation;
             }
         }
 
@@ -54,7 +66,7 @@ namespace GameFoundation.Scripts.Features.Language.Components
                 this.key = value;
                 if (this.languageService.TryGetTranslation(this.key, out var translation))
                 {
-                    this.text = translation;
+                    this.textMeshPro.text = translation;
                 }
             }
         }
