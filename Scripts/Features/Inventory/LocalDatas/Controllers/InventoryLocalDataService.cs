@@ -38,6 +38,7 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
                 if (this.Data.InventoryItems.ContainsKey(item.ItemId)) continue;
                 this.Data.InventoryItems.Add(item.ItemId, item.Amount);
                 this.signalBus.Fire<OnInventoryValueChange>(new(item.ItemId));
+                this.Save();
             }
         }
 
