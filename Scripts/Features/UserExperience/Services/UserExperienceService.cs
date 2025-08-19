@@ -2,9 +2,10 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
 {
     using System;
     using GameFoundation.Scripts.Features.UserExperience.LocalDatas;
+    using UnityEngine;
     using VContainer.Unity;
 
-    public class UserExperienceService : IInitializable
+    public class UserExperienceService : IInitializable, IDisposable
     {
         private readonly UserExperienceLocalDataService userExperienceLocalDataService;
 
@@ -16,6 +17,12 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
         public void Initialize()
         {
             this.userExperienceLocalDataService.EnterGame();
+            Application.quitting += this.Dispose;
+        }
+
+        public void Dispose()
+        {
+            this.userExperienceLocalDataService.ExitGame();
         }
 
         public int GetTimePlayed()
@@ -26,6 +33,11 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
         public DateTime GetLastLoginDate()
         {
             return this.userExperienceLocalDataService.GetLastLoginDate();
+        }
+
+        public DateTime GetLastLogoutDate()
+        {
+            return this.userExperienceLocalDataService.Data.lastLogoutDate;
         }
     }
 }

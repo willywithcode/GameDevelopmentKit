@@ -1,28 +1,28 @@
 namespace GameFoundation.Scripts.Features.NewDayReset.Services
 {
-    using System;
     using System.Threading;
     using Cysharp.Threading.Tasks;
-    using GameFoundation.Scripts.Features.UserExperience.Services;
+    using GameFoundation.Scripts.Features.NewDayReset.LocalDatas;
     using UnityEngine.Events;
     using VContainer.Unity;
 
     public class NewDayResetService : IAsyncStartable
     {
-        public           UnityAction           OnNewDayReset;
-        private readonly UserExperienceService userExperienceService;
+        private readonly NewDayResetLocalDataService newDayResetLocalDataService;
+        public           UnityAction                 OnNewDayReset;
 
-        public NewDayResetService(UserExperienceService userExperienceService)
+        public NewDayResetService(NewDayResetLocalDataService newDayResetLocalDataService)
         {
-            this.userExperienceService = userExperienceService;
+            this.newDayResetLocalDataService = newDayResetLocalDataService;
         }
 
         private void ResetNewDay()
         {
-            if (this.userExperienceService.GetLastLoginDate().Day < DateTime.Now.Day)
+            if (this.newDayResetLocalDataService.IsNewDay())
             {
                 this.OnNewDayReset?.Invoke();
             }
+            this.newDayResetLocalDataService.SetLastResetDate();
         }
 
         public async UniTask StartAsync(CancellationToken cancellation = new CancellationToken())
