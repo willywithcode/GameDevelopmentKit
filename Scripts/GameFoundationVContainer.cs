@@ -8,6 +8,7 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
     using GameFoundation.Scripts.Features.Inventory.DI;
+    using GameFoundation.Scripts.Features.NewDayReset.DI;
     using GameFoundation.Scripts.Features.UserExperience.DI;
     using GameFoundation.Scripts.Features.Vibration.DI;
     using GameFoundation.Scripts.LocalData.DI;
@@ -34,6 +35,7 @@ namespace GameFoundation.Scripts
             builder.Register<ObjectPoolManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.Register<SignalBus>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.RegisterMVP();
+            builder.RegisterNewDayReset();
             builder.RegisterAudio();
             builder.RegisterLocalData();
             builder.RegisterVibration();

@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Features.UserExperience.Services
 {
+    using System;
     using GameFoundation.Scripts.Features.UserExperience.LocalDatas;
     using VContainer.Unity;
 
@@ -16,9 +17,15 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
         {
             this.userExperienceLocalDataService.EnterGame();
         }
+
         public int GetTimePlayed()
         {
             return this.userExperienceLocalDataService.GetTimePlayed();
+        }
+
+        public DateTime GetLastLoginDate()
+        {
+            return this.userExperienceLocalDataService.GetLastLoginDate();
         }
     }
 }
