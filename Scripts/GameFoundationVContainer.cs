@@ -1,5 +1,9 @@
 namespace GameFoundation.Scripts
 {
+    #if DAILY_REWARD
+    using HGameFoundation.Scripts.Features.DailyReward.DI;
+    #endif
+
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
@@ -11,16 +15,15 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Patterns.ObjectPooling;
     using GameFoundation.Scripts.Patterns.SignalBus;
     using VContainer;
-    #if DAILY_REWARD
-    using HGameFoundation.Scripts.Features.DailyReward.DI;
-    #endif
-
     #if MULTILANGUAGE
     using GameFoundation.Scripts.Features.Language.DI;
     #endif
 
     #if STATE_MACHINE
     using GameFoundation.Scripts.Patterns.StateMachine.DI;
+    #endif
+    #if SCHEDULE_REWARD
+    using GameFoundation.Scripts.Features.ScheduleReward.DI;
     #endif
 
     public static class GameFoundationVContainer
@@ -45,6 +48,9 @@ namespace GameFoundation.Scripts
             #endif
             #if MULTILANGUAGE
             builder.RegisterLanguage();
+            #endif
+            #if SCHEDULE_REWARD
+            builder.RegisterScheduleReward();
             #endif
         }
     }
