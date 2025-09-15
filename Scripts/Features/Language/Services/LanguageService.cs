@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Features.Language.Services
 {
+    using System.Collections.Generic;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.Language.Blueprints;
     using GameFoundation.Scripts.Features.Language.LocalDatas;
@@ -59,6 +60,13 @@ namespace GameFoundation.Scripts.Features.Language.Services
 
             translation = null;
             return false;
+        }
+
+        public List<string> GetAvailableLanguages()
+        {
+            return this.languageBlueprint.LanguageDatas.AsValueEnumerable()
+                .Select(data => data.languageName)
+                .ToList();
         }
     }
 }
