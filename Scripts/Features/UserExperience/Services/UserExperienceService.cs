@@ -5,7 +5,7 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
     using UnityEngine;
     using VContainer.Unity;
 
-    public class UserExperienceService : IInitializable, IDisposable
+    public class UserExperienceService : IPostInitializable, IDisposable
     {
         private readonly UserExperienceLocalDataService userExperienceLocalDataService;
 
@@ -14,7 +14,7 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
             this.userExperienceLocalDataService = userExperienceLocalDataService;
         }
 
-        public void Initialize()
+        public void PostInitialize()
         {
             this.userExperienceLocalDataService.EnterGame();
             Application.quitting += this.Dispose;

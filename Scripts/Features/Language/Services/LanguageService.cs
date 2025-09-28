@@ -6,9 +6,11 @@ namespace GameFoundation.Scripts.Features.Language.Services
     using GameFoundation.Scripts.Features.Language.Signals;
     using GameFoundation.Scripts.Features.UserExperience.Services;
     using GameFoundation.Scripts.Patterns.SignalBus;
+    using UnityEngine;
+    using VContainer.Unity;
     using ZLinq;
 
-    public class LanguageService
+    public class LanguageService : IInitializable
     {
         #region Inject
 
@@ -32,12 +34,16 @@ namespace GameFoundation.Scripts.Features.Language.Services
 
         #endregion
 
-        public string GetCurrentLanguage()
+        public void Initialize()
         {
             if (this.userExperienceService.GetTimePlayed() <= 0)
             {
                 this.languageLocalDataService.CurrentLanguage = this.languageBlueprint.initLanguage;
             }
+        }
+
+        public string GetCurrentLanguage()
+        {
             return this.languageLocalDataService.CurrentLanguage;
         }
 

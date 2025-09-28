@@ -10,7 +10,6 @@ namespace GameFoundation.Scripts.Features.Language.LocalDatas
 
         public void Reset()
         {
-            this.CurrentLanguage = "vietnamese";
         }
     }
     public class LanguageLocalDataService : BaseLocalDataService<LanguageLocalData>
