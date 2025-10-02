@@ -63,6 +63,10 @@ namespace GameFoundation.Scripts.Features.Language.Services
             {
                 return true;
             }
+            if (this.languageBlueprint.defaultLanguageData.translations.TryGetValue(key, out translation))
+            {
+                return true;
+            }
 
             translation = null;
             return false;
