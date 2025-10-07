@@ -37,7 +37,7 @@ namespace GameFoundation.Scripts.Addressable
             lock (this.initGate)
                 if (this.isInitialized)
                     return;
-            var initHandle = Addressables.InitializeAsync();
+            var initHandle = Addressables.InitializeAsync(autoReleaseHandle: false);
             await initHandle.Task.AsUniTask();
             if (initHandle.Status == AsyncOperationStatus.Failed) {
                 Debug.LogError($"Addressables initialization failed: {initHandle.OperationException?.Message}");
@@ -49,7 +49,28 @@ namespace GameFoundation.Scripts.Addressable
         // ------------- Load APIs -------------
         public T LoadAsset<T>(string key) where T : Object
         {
-            return this.LoadAssetAsync<T>(key).GetAwaiter().GetResult();
+            if (string.IsNullOrEmpty(key)) {
+                var ex = new ArgumentException("Asset key is null or empty.");
+                this.OnAssetLoadFailed?.Invoke(key, ex);
+                throw ex;
+            }
+            if (this.assetCache.TryGetValue(key, out var existed) && existed.asset is T tCached) {
+                this.assetCache.AddOrUpdate(key, existed, (k, v) => (v.asset, v.handle, v.refCount + 1));
+                this.OnAssetLoaded?.Invoke(key, tCached);
+                return tCached;
+            }
+            this.EnsureInitialized().Forget();
+            var handle = Addressables.LoadAssetAsync<T>(key);
+            var asset  = handle.WaitForCompletion();
+            if (handle.Status != AsyncOperationStatus.Succeeded) {
+                var ex = new InvalidOperationException($"Load failed for key '{key}': {handle.OperationException?.Message}");
+                this.OnAssetLoadFailed?.Invoke(key, ex);
+                Addressables.Release(handle);
+                throw ex;
+            }
+            this.assetCache[key] = (asset, handle, 1);
+            this.OnAssetLoaded?.Invoke(key, asset);
+            return asset;
         }
 
         public async UniTask<T> LoadAssetAsync<T>(string key, IProgress<float> progress = null) where T : Object
@@ -208,7 +229,6 @@ namespace GameFoundation.Scripts.Addressable
             await this.EnsureInitialized();
             var allKeys = this.CollectAllKeys();
             if (allKeys.Count == 0) return Guid.Empty;
-            // Tính size 1 lần cho toàn bộ
             var sizeHandle = Addressables.GetDownloadSizeAsync(allKeys);
             var totalBytes = await sizeHandle.Task.AsUniTask();
             Addressables.Release(sizeHandle);
