@@ -4,8 +4,18 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
     public interface IPresenter
     {
-        public void SetView(IView view);
         public void Open();
         public void Close();
+        public void Destroy();
+        public bool IsOpen { get; }
+        public IView View { get; }
+
+    }
+    public enum PresenterType
+    {
+        Screen,
+        Overlay,
+        Popup,
+        Splash
     }
 }

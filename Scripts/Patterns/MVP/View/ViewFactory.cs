@@ -3,14 +3,17 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
     using System;
     using System.Collections.Generic;
     using GameFoundation.Scripts.Addressable;
+    using GameFoundation.Scripts.Extenstions;
     using GameFoundation.Scripts.Patterns.MVP.Attribute;
+    using GameFoundation.Scripts.Patterns.MVP.Implementation;
     using UnityEngine;
     using VContainer;
+    using ZLinq;
     using Object = UnityEngine.Object;
 
     public interface IViewFactory
     {
-        T    CreateView<T>() where T : BaseView;
+        T    CreateView<T>(Type typePresenter) where T : BaseView;
         T    CreateView<T>(Transform parent) where T : BaseView;
         void ReturnToPool<T>(T       view) where T : BaseView;
     }
@@ -19,19 +22,46 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
     {
         private readonly IAssetsManager                   assetsManager;
         private readonly IObjectResolver                  resolver;
+        private readonly UICanvas                         uiCanvas;
         private readonly Dictionary<Type, string>         viewPathCache = new();
         private readonly Dictionary<Type, List<BaseView>> viewPool      = new();
 
         [Inject]
-        public ViewFactory(IAssetsManager assetsManager, IObjectResolver resolver)
+        public ViewFactory(IAssetsManager assetsManager, IObjectResolver resolver, UICanvas uiCanvas)
         {
             this.assetsManager = assetsManager;
             this.resolver      = resolver;
+            this.uiCanvas      = uiCanvas;
         }
 
-        public T CreateView<T>() where T : BaseView
+        public TView CreateView<TView>(Type presenterType) where TView : BaseView
         {
-            return this.CreateView<T>(null);
+            var parentTransform = this.uiCanvas.transform;
+            var isOverlayPresenter = presenterType.GetBaseTypes()
+                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OverlayPresenter<>));
+            var isPopupPresenter = presenterType.GetBaseTypes()
+                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(PopupPresenter<>));
+            var isScreenPresenter = presenterType.GetBaseTypes()
+                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ScreenPresenter<>));
+            var isSplashPresenter = presenterType.GetBaseTypes()
+                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SplashPresenter<>));
+            if (isOverlayPresenter)
+            {
+                parentTransform = this.uiCanvas.OverlayTransform;
+            }
+            else if (isPopupPresenter)
+            {
+                parentTransform = this.uiCanvas.PopupTransform;
+            }
+            else if (isScreenPresenter)
+            {
+                parentTransform = this.uiCanvas.ScreenTransform;
+            }
+            else if (isSplashPresenter)
+            {
+                parentTransform = this.uiCanvas.SplashTransform;
+            }
+            return this.CreateView<TView>(parentTransform);
         }
 
         public T CreateView<T>(Transform parent) where T : BaseView

@@ -5,7 +5,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     using GameFoundation.Scripts.Patterns.MVP.View;
     using GameFoundation.Scripts.Patterns.SignalBus;
     using GameFoundation.Scripts.Signals;
-    using UnityEngine;
     using UnityEngine.UI;
 
     public abstract class BasePresenter<TView> : IPresenter where TView : BaseView
@@ -14,36 +13,28 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         protected readonly IViewFactory viewFactory;
         protected readonly SignalBus    signalBus;
+        protected readonly UICanvas     uiCanvas;
 
         protected BasePresenter(
             IViewFactory viewFactory,
-            SignalBus    signalBus
+            SignalBus    signalBus,
+            UICanvas     uiCanvas
         )
         {
             this.viewFactory = viewFactory;
             this.signalBus   = signalBus;
+            this.uiCanvas    = uiCanvas;
         }
 
         #endregion
 
-        protected TView     view;
-        protected Transform parentTransform;
-
-        public void SetParent(Transform parent)
-        {
-            this.parentTransform = parent;
-        }
-
-        public void SetView(IView view)
-        {
-            this.view = (TView)view;
-        }
+        protected TView view;
 
         public virtual void Open()
         {
             if (this.view == null)
             {
-                this.view = this.viewFactory.CreateView<TView>(this.parentTransform);
+                this.view = this.viewFactory.CreateView<TView>(this.GetType());
                 this.Ready();
             }
             this.Bind();
@@ -60,6 +51,14 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             this.view.Hide();
             this.OnAfterHide();
         }
+
+        public void Destroy()
+        {
+            this.DestroyView();
+        }
+
+        public bool  IsOpen => this.view != null && this.view.gameObject.activeInHierarchy;
+        public IView View   => this.view;
 
         protected virtual void Bind() { }
 
@@ -100,8 +99,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     {
         protected TModel model;
 
-        protected BasePresenter(IViewFactory viewFactory, SignalBus signalBus) : base(viewFactory, signalBus)
+        protected BasePresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas, TModel model) : base(viewFactory, signalBus, uiCanvas)
         {
+            this.model = model;
         }
 
         public void SetModel(TModel model)

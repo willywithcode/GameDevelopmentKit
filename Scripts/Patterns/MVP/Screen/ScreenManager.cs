@@ -3,6 +3,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
     using System;
     using System.Collections.Generic;
     using GameFoundation.Scripts.Extenstions;
+    using GameFoundation.Scripts.Patterns.MVP.Implementation;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.View;
     using UnityEngine;
@@ -15,22 +16,18 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
 
         private readonly IViewFactory                 viewFactory;
         private readonly IObjectResolver              resolver;
+        private readonly UICanvas                     uiCanvas;
         private readonly Dictionary<Type, IPresenter> presenters = new();
-        private          Transform                    parentTransform;
 
         [Inject]
-        public ScreenManager(IViewFactory viewFactory, IObjectResolver resolver)
+        public ScreenManager(IViewFactory viewFactory, IObjectResolver resolver, UICanvas uiCanvas)
         {
             this.viewFactory = viewFactory;
             this.resolver    = resolver;
+            this.uiCanvas    = uiCanvas;
         }
 
         #endregion
-
-        public void SetScreenParent(Transform parent)
-        {
-            this.parentTransform = parent;
-        }
 
         public void ShowScreen<T>() where T : IPresenter
         {
@@ -38,19 +35,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
             if (!this.presenters.TryGetValue(presenterType, out var presenter))
             {
                 presenter = this.resolver.Resolve(presenterType) as IPresenter;
-
                 if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-                var isBasePresenter = presenter.GetType().GetBaseTypes()
-                    .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(BasePresenter<>));
-                if (isBasePresenter)
-                {
-                    var setParentMethod = presenter.GetType().GetMethod("SetParent", new[] { typeof(Transform) });
-                    if (setParentMethod != null)
-                    {
-                        setParentMethod.Invoke(presenter, new object[] { this.parentTransform });
-                    }
-                }
-
                 this.presenters[presenterType] = presenter;
             }
             presenter.Open();
@@ -64,17 +49,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
                 presenter = this.resolver.Resolve(presenterType) as IPresenter;
 
                 if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-                var isBasePresenter = presenter.GetType().GetBaseTypes()
-                    .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(BasePresenter<>));
-                if (isBasePresenter)
-                {
-                    var setParentMethod = presenter.GetType().GetMethod("SetParent", new[] { typeof(Transform) });
-                    if (setParentMethod != null)
-                    {
-                        setParentMethod.Invoke(presenter, new object[] { this.parentTransform });
-                    }
-                }
-
                 this.presenters[presenterType] = presenter;
             }
 
@@ -104,6 +78,74 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
             }
         }
 
+        public void HideAllScreens(PresenterType type)
+        {
+            foreach (var presenter in this.presenters.Values)
+            {
+                var presenterType = presenter.GetType();
+                var isOfType = type switch
+                {
+                    PresenterType.Screen => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ScreenPresenter<>)),
+                    PresenterType.Popup => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(PopupPresenter<>)),
+                    PresenterType.Overlay => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OverlayPresenter<>)),
+                    PresenterType.Splash => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SplashPresenter<>)),
+                    _ => false
+                };
+                if (isOfType) presenter.Close();
+            }
+        }
+
+        public T GetScreen<T>() where T : IPresenter
+        {
+            var presenterType = typeof(T);
+            if (this.presenters.TryGetValue(presenterType, out var presenter)) return (T)presenter;
+            presenter = this.resolver.Resolve(presenterType) as IPresenter;
+            if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
+            this.presenters[presenterType] = presenter;
+            presenter.Close();
+            return (T)presenter;
+        }
+
+        public bool IsScreenOpen<T>() where T : IPresenter
+        {
+            var presenterType = typeof(T);
+            if (this.presenters.TryGetValue(presenterType, out var presenter)) return (presenter as BasePresenter<BaseView>)?.IsOpen ?? false;
+            return false;
+        }
+
+        public IEnumerable<IPresenter> GetAllScreens(bool onlyOpened = false)
+        {
+            return onlyOpened ? this.presenters.Values.AsValueEnumerable().Where(p => (p as BasePresenter<BaseView>)?.IsOpen ?? false).ToList() : this.presenters.Values;
+        }
+
+        public IEnumerable<IPresenter> GetAllScreens(PresenterType type, bool onlyOpened = false)
+        {
+            var result = new List<IPresenter>();
+            foreach (var presenter in this.presenters.Values)
+            {
+                var presenterType = presenter.GetType();
+                var isOfType = type switch
+                {
+                    PresenterType.Screen => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ScreenPresenter<>)),
+                    PresenterType.Popup => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(PopupPresenter<>)),
+                    PresenterType.Overlay => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OverlayPresenter<>)),
+                    PresenterType.Splash => presenterType.GetBaseTypes()
+                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SplashPresenter<>)),
+                    _ => false
+                };
+                if (isOfType && (!onlyOpened || (presenter as BasePresenter<BaseView>)?.IsOpen == true))
+                    result.Add(presenter);
+            }
+            return result;
+        }
+
         public void DestroyScreen<T>() where T : IPresenter
         {
             var presenterType = typeof(T);
@@ -111,7 +153,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
             if (this.presenters.TryGetValue(presenterType, out var presenter))
             {
                 presenter.Close();
-                if (presenter is BasePresenter<BaseView> basePresenter) basePresenter.DestroyView();
+                presenter.Destroy();
                 this.presenters.Remove(presenterType);
             }
         }
