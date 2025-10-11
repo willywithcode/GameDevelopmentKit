@@ -38,7 +38,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.SubServices
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"[CommonButtonClickSound] Error when play button click sound: {e}");
+                // UnityEngine.Debug.LogError($"[CommonButtonClickSound] Error when play button click sound: {e}");
             }
         }
     }

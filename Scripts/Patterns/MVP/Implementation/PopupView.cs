@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 {
+    using Cysharp.Threading.Tasks;
     using DG.Tweening;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.View;
@@ -174,6 +175,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
     public class PopupPresenter<T> : BasePresenter<T> where T : PopupView
     {
+        protected override UniTask OnBeforeShow()
+        {
+            this.OnShowWithAnim(true);
+            return base.OnBeforeShow();
+        }
+
         protected virtual void OnShowWithAnim(bool haveAnimation)
         {
             if (this.view == null) return;
@@ -195,6 +202,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(
             viewFactory, signalBus, uiCanvas) { }
 
+        protected override UniTask OnBeforeShow()
+        {
+            this.OnShowWithAnim(true);
+            return base.OnBeforeShow();
+        }
 
         protected virtual void OnShowWithAnim(bool haveAnimation)
         {
