@@ -32,7 +32,14 @@ namespace GameFoundation.Scripts.Features.AudioSystem.SubServices
 
         private void OnButtonClick(OnButtonClickSignal obj)
         {
-            this.audioManagerService.PlaySfx("tap-click");
+            try
+            {
+                this.audioManagerService.PlaySfx("tap-click");
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError($"[CommonButtonClickSound] Error when play button click sound: {e}");
+            }
         }
     }
 }
