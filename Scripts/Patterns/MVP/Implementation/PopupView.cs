@@ -192,8 +192,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
     public class PopupPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : PopupView
     {
-        public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas, TModel model) : base(
-            viewFactory, signalBus, uiCanvas, model) { }
+        public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(
+            viewFactory, signalBus, uiCanvas) { }
 
 
         protected virtual void OnShowWithAnim(bool haveAnimation)

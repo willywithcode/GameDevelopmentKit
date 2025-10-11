@@ -99,9 +99,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     {
         protected TModel model;
 
-        protected BasePresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas, TModel model) : base(viewFactory, signalBus, uiCanvas)
+        protected BasePresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas)
         {
-            this.model = model;
         }
 
         public void SetModel(TModel model)

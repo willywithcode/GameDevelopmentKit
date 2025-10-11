@@ -265,7 +265,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
     public class SplashPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : SplashView
     {
-        public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas, TModel model) : base(viewFactory, signalBus, uiCanvas, model) { }
+        public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
 
         protected void OnShow(bool haveAnimation)
         {
