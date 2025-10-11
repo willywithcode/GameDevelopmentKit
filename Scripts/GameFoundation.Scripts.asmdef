@@ -9,6 +9,7 @@
     "Animancer",
     "Lofelt.NiceVibrations",
     "Unity.TextMeshPro",
+    "DOTween.Modules",
     "GameFoundation.Scripts.DI"
   ]
 }
