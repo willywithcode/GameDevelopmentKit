@@ -197,10 +197,16 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             signalBus, uiCanvas) { }
     }
 
-    public class PopupPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : PopupView
+    public class PopupPresenter<TView, TModel> : PopupPresenter<TView> where TView : PopupView
     {
+        protected TModel model;
         public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(
             viewFactory, signalBus, uiCanvas) { }
+
+        public void SetModel(TModel model)
+        {
+            this.model = model;
+        }
 
         protected override UniTask OnBeforeShow()
         {

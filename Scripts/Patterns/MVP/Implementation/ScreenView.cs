@@ -13,8 +13,15 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public ScreenPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
     }
 
-    public class ScreenPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : ScreenView
+    public class ScreenPresenter<TView, TModel> : ScreenPresenter<TView> where TView : ScreenView
     {
+        protected TModel model;
+
         public ScreenPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
+
+        public void SetModel(TModel model)
+        {
+            this.model = model;
+        }
     }
 }

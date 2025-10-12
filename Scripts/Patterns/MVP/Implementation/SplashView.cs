@@ -258,9 +258,15 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         }
     }
 
-    public class SplashPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : SplashView
+    public class SplashPresenter<TView, TModel> : SplashPresenter<TView> where TView : SplashView
     {
+        protected TModel model;
         public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
+
+        public void SetModel(TModel model)
+        {
+            this.model = model;
+        }
 
         protected virtual async UniTask OnShow(bool haveAnimation)
         {

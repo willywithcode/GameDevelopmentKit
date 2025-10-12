@@ -13,8 +13,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public OverlayPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
     }
 
-    public class OverlayPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : OverlayView
+    public class OverlayPresenter<TView, TModel> : OverlayPresenter<TView> where TView : OverlayView
     {
+        protected TModel model;
         public OverlayPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
+        public void SetModel(TModel model)
+        {
+            this.model = model;
+        }
     }
 }
