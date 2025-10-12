@@ -58,7 +58,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             this.SetInteraction(false);
             this.gameObject.SetActive(false);
         }
-        public virtual void Show(bool animate)
+        public virtual async UniTask Show(bool animate)
         {
             this.KillActiveSequence();
             base.Show();
@@ -85,15 +85,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             }
 
             this.SetInteraction(false);
-            this.activeSequence.OnComplete(() =>
-            {
-                this.SetInteraction(true);
-                this.onSplashShown?.Invoke();
-                this.activeSequence = null;
-            });
+            await this.activeSequence.AsyncWaitForCompletion();
+            this.SetInteraction(true);
+            this.onSplashShown?.Invoke();
+            this.activeSequence = null;
         }
 
-        public virtual void Hide(bool animate)
+        public virtual async UniTask Hide(bool animate)
         {
             this.KillActiveSequence();
 
@@ -125,15 +123,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                 this.activeSequence.Join(this.backgroundImage.DOFade(0f, this.hideDuration)
                     .SetUpdate(UpdateType.Normal, true));
             }
-
-            this.activeSequence.OnComplete(() =>
-            {
-                this.CancelLoadingOperation();
-                base.Hide();
-                this.ResetHiddenState();
-                this.onSplashHidden?.Invoke();
-                this.activeSequence = null;
-            });
+            await this.activeSequence.AsyncWaitForCompletion();
+            this.CancelLoadingOperation();
+            base.Hide();
+            this.ResetHiddenState();
+            this.onSplashHidden?.Invoke();
+            this.activeSequence = null;
         }
 
         public async UniTask PlaySplashAsync(Func<CancellationToken, UniTask> loadOperation, bool animateIn = true, bool animateOut = true)
@@ -238,16 +233,16 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     {
         public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
 
-        protected void OnShow(bool haveAnimation)
+        protected virtual async UniTask OnShow(bool haveAnimation)
         {
             if (this.view == null) return;
-            this.view.Show(haveAnimation);
+            await this.view.Show(haveAnimation);
         }
 
-        protected void OnHide(bool haveAnimation)
+        protected virtual async UniTask OnHide(bool haveAnimation)
         {
             if (this.view == null) return;
-            this.view.Hide(haveAnimation);
+            await this.view.Hide(haveAnimation);
         }
 
         protected UniTask PlaySplashAsync(Func<CancellationToken, UniTask> loadOperation, bool animateIn = true, bool animateOut = true)
@@ -267,16 +262,16 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     {
         public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
 
-        protected void OnShow(bool haveAnimation)
+        protected virtual async UniTask OnShow(bool haveAnimation)
         {
             if (this.view == null) return;
-            this.view.Show(haveAnimation);
+            await this.view.Show(haveAnimation);
         }
 
-        protected void OnHide(bool haveAnimation)
+        protected virtual async UniTask OnHide(bool haveAnimation)
         {
             if (this.view == null) return;
-            this.view.Hide(haveAnimation);
+            await this.view.Hide(haveAnimation);
         }
 
         protected UniTask PlaySplashAsync(Func<CancellationToken, UniTask> loadOperation, bool animateIn = true, bool animateOut = true)
