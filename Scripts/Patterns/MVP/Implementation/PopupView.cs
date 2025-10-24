@@ -76,10 +76,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                     .SetUpdate(UpdateType.Normal, true));
             }
 
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
             this.activeSequence.OnComplete(() =>
             {
-                this.SetInteraction(true);
+                // this.SetInteraction(true);
                 this.activeSequence = null;
             });
         }
@@ -95,13 +95,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
             if (!animate)
             {
-                this.SetInteraction(false);
+                // this.SetInteraction(false);
                 base.Hide();
                 this.ResetHiddenState();
                 return;
             }
 
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
 
             this.activeSequence = DOTween.Sequence();
             this.activeSequence.Join(this.ContentTransform.DOScale(Vector3.zero, this.hideDuration)
@@ -169,7 +169,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             this.KillActiveSequence();
             this.ResetHiddenState();
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
         }
     }
 
