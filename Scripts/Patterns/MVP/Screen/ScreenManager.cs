@@ -103,11 +103,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
         {
             var presenterType = typeof(T);
             if (this.presenters.TryGetValue(presenterType, out var presenter)) return (T)presenter;
-            presenter = this.resolver.Resolve(presenterType) as IPresenter;
-            if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-            this.presenters[presenterType] = presenter;
-            presenter.Close();
-            return (T)presenter;
+            return default;
+            // presenter = this.resolver.Resolve(presenterType) as IPresenter;
+            // if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
+            // this.presenters[presenterType] = presenter;
+            // presenter.Close();
+            // return (T)presenter;
         }
 
         public bool IsScreenOpen<T>() where T : IPresenter
