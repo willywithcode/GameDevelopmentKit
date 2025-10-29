@@ -1,3 +1,5 @@
+using GameFoundation.Scripts.LocalData.Interfaces;
+
 namespace GameFoundation.Scripts.LocalData.Service
 {
     using System;
@@ -34,8 +36,9 @@ namespace GameFoundation.Scripts.LocalData.Service
             {
                 Debug.LogError($"Failed to load data for key: {key}. Error: {e.Message}");
             }
-
-            return new();
+            var data = new T();
+            ((ILocalData)data).Reset();
+            return data;
         }
 
         public static void DeleteData(string key)
