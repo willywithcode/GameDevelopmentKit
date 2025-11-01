@@ -45,6 +45,10 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             var soundEmitter = this.objectPooling.Spawn<SoundEmitter>("SoundEmitter");
             if (isLoop)
             {
+                if (this.sfxLoopEmitters.ContainsKey(audioId))
+                {
+                    this.StopSfx(audioId);
+                }
                 this.sfxLoopEmitters.Add(audioId, soundEmitter);
             }
             soundEmitter.SetAudioClip(this.assetsManager.LoadAsset<AudioClip>(audioId))
