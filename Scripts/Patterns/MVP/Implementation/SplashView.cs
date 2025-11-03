@@ -55,7 +55,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             }
 
             this.ResetHiddenState();
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
             this.gameObject.SetActive(false);
         }
         public virtual async UniTask Show(bool animate)
@@ -84,7 +84,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                     .SetUpdate(UpdateType.Normal, true));
             }
 
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
             await this.activeSequence.AsyncWaitForCompletion();
             this.SetInteraction(true);
             this.onSplashShown?.Invoke();
@@ -103,14 +103,14 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             if (!animate)
             {
                 this.CancelLoadingOperation();
-                this.SetInteraction(false);
+                // this.SetInteraction(false);
                 base.Hide();
                 this.ResetHiddenState();
                 this.onSplashHidden?.Invoke();
                 return;
             }
 
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
 
             this.activeSequence = DOTween.Sequence();
             this.activeSequence.Join(this.ContentTransform.DOScale(Vector3.one * this.hiddenScale, this.hideDuration)
@@ -225,7 +225,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             this.KillActiveSequence();
             this.CancelLoadingOperation();
             this.ResetHiddenState();
-            this.SetInteraction(false);
+            // this.SetInteraction(false);
         }
     }
 
