@@ -96,5 +96,23 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Entities
             this.onPlayComplete?.Invoke();
             this.onPlayComplete = null;
         }
+
+        public void Pause()
+        {
+            if (this.audioSource.isPlaying)
+            {
+                this.audioSource.Pause();
+            }
+        }
+
+        public void Resume()
+        {
+            if (!this.audioSource.isPlaying && this.audioSource.clip != null)
+            {
+                this.audioSource.UnPause();
+            }
+        }
+
+        public bool IsPaused => this.audioSource.clip != null && !this.audioSource.isPlaying && this.audioSource.time > 0;
     }
 }

@@ -96,6 +96,22 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             this.musicQueue.Clear();
         }
 
+        public void PauseMusic()
+        {
+            if (this.musicSource != null)
+            {
+                this.musicSource.Pause();
+            }
+        }
+
+        public void ResumeMusic()
+        {
+            if (this.musicSource != null)
+            {
+                this.musicSource.Resume();
+            }
+        }
+
         public void StopSfx(string audioId)
         {
             if (this.sfxLoopEmitters.TryGetValue(audioId, out var emitter))
