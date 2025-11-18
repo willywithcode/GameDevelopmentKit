@@ -86,7 +86,7 @@ namespace GameFoundation.Scripts.Addressable
                 this.OnAssetLoaded?.Invoke(key, tCached);
                 return tCached;
             }
-            await this.EnsureInitialized();
+            // await this.EnsureInitialized();
             var handle = Addressables.LoadAssetAsync<T>(key);
             while (!handle.IsDone) {
                 progress?.Report(handle.PercentComplete);

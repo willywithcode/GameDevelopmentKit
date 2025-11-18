@@ -6,6 +6,7 @@ namespace GameFoundation.Scripts
 
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
+    using GameFoundation.Scripts.Features.Highlight.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
     using GameFoundation.Scripts.Features.Inventory.DI;
     using GameFoundation.Scripts.Features.NewDayReset.DI;
@@ -42,6 +43,7 @@ namespace GameFoundation.Scripts
             builder.RegisterInternetChecking();
             builder.RegisterUserExperience();
             builder.RegisterInventory();
+            builder.RegisterHighlightFeature();
             #if DAILY_REWARD
             builder.RegisterDailyReward();
             #endif
