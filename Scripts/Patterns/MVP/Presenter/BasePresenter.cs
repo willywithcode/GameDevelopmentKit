@@ -38,6 +38,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
                 this.Ready();
             }
             this.Bind();
+            this.view.transform.SetAsLastSibling();
             this.signalBus.Fire(new OpenPresenterSignal(this));
             this.OnBeforeShow();
             this.view.Show();
