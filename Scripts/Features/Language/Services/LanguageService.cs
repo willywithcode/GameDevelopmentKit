@@ -2,6 +2,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.Language.Blueprints;
@@ -26,6 +27,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
         private readonly Dictionary<string, LanguageData>  languageDataMap;
         private readonly List<string>                      availableLanguages;
         private readonly string                            defaultLanguageName;
+        private readonly Dictionary<string, string>        languageCodeToNameMap;
 
         public LanguageService(
             LanguageLocalDataService languageLocalDataService,
@@ -55,8 +57,9 @@ namespace GameFoundation.Scripts.Features.Language.Services
                 }
             }
 
-            this.availableLanguages  = languagesFromBlueprint;
-            this.defaultLanguageName = this.DetermineDefaultLanguageName(this.languageBlueprint, this.languageDataMap);
+            this.availableLanguages     = languagesFromBlueprint;
+            this.defaultLanguageName    = this.DetermineDefaultLanguageName(this.languageBlueprint, this.languageDataMap);
+            this.languageCodeToNameMap  = this.BuildLanguageCodeToNameMap(this.languageBlueprint);
         }
 
         #endregion
@@ -264,8 +267,18 @@ namespace GameFoundation.Scripts.Features.Language.Services
         {
             if (this.userExperienceService.GetTimePlayed() <= 0)
             {
-                var desiredLanguage = this.languageBlueprint.initLanguage;
-                if (!this.languageDataMap.ContainsKey(desiredLanguage) && !string.IsNullOrEmpty(this.defaultLanguageName))
+                string desiredLanguage;
+
+                if (this.languageBlueprint.autoSelectLanguage)
+                {
+                    desiredLanguage = this.DetectSystemLanguage();
+                }
+                else
+                {
+                    desiredLanguage = this.languageBlueprint.initLanguage;
+                }
+
+                if (string.IsNullOrEmpty(desiredLanguage) || !this.languageDataMap.ContainsKey(desiredLanguage))
                 {
                     desiredLanguage = this.defaultLanguageName;
                 }
@@ -325,6 +338,53 @@ namespace GameFoundation.Scripts.Features.Language.Services
             }
 
             return this.languageDataMap.TryGetValue(language, out languageData);
+        }
+
+        private Dictionary<string, string> BuildLanguageCodeToNameMap(LanguageBlueprint blueprint)
+        {
+            var codeToNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (blueprint?.languages == null)
+            {
+                return codeToNameMap;
+            }
+
+            foreach (var entry in blueprint.languages)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.code) || string.IsNullOrEmpty(entry.languageName))
+                {
+                    continue;
+                }
+
+                if (!codeToNameMap.ContainsKey(entry.code))
+                {
+                    codeToNameMap[entry.code] = entry.languageName;
+                }
+            }
+
+            return codeToNameMap;
+        }
+
+        private string DetectSystemLanguage()
+        {
+            try
+            {
+                var twoLetterCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                if (!string.IsNullOrEmpty(twoLetterCode) &&
+                    this.languageCodeToNameMap.TryGetValue(twoLetterCode, out var languageName) &&
+                    this.languageDataMap.ContainsKey(languageName))
+                {
+                    Debug.Log($"[LanguageService] Auto-detected system language: {twoLetterCode} -> {languageName}");
+                    return languageName;
+                }
+
+                Debug.Log($"[LanguageService] System language '{twoLetterCode}' not available, falling back to default: {this.defaultLanguageName}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[LanguageService] Failed to detect system language: {e.Message}");
+            }
+
+            return this.defaultLanguageName;
         }
     }
 }

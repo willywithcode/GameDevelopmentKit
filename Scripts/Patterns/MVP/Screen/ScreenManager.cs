@@ -114,7 +114,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
         public bool IsScreenOpen<T>() where T : IPresenter
         {
             var presenterType = typeof(T);
-            if (this.presenters.TryGetValue(presenterType, out var presenter)) return (presenter as BasePresenter<BaseView>)?.IsOpen ?? false;
+            if (this.presenters.TryGetValue(presenterType, out var presenter)) return presenter?.IsOpen ?? false;
             return false;
         }
 

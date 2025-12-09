@@ -6,8 +6,9 @@ namespace GameFoundation.Scripts.Features.Language.Blueprints
     [Serializable]
     public class LanguageBlueprint
     {
-        public string initLanguage;
-        public string defaultLanguage;
+        public string                      initLanguage;
+        public string                      defaultLanguage;
+        public bool                        autoSelectLanguage;
         public List<LanguageFileReference> languages = new();
     }
 
@@ -16,5 +17,6 @@ namespace GameFoundation.Scripts.Features.Language.Blueprints
     {
         public string languageName;
         public string address;
+        public string code;
     }
 }
