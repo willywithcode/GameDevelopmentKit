@@ -7,6 +7,8 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
     {
         public void    CreatePool<T>(string key, int capacity) where T : Object, IPoolable;
         public T       Spawn<T>(string      key) where T : Object, IPoolable;
+        public T       Spawn<T>(string      key, Transform parent) where T : Object, IPoolable;
+        public T       Spawn<T>(string      key, Vector3   position, Quaternion rotation) where T : Object, IPoolable;
         public void    Despawn(IPoolable    pooler);
         public void    DespawnAll<T>() where T : Object, IPoolable;
         public bool    IsInitialized(string key);

@@ -3,8 +3,8 @@ namespace GameFoundation.Scripts
     #if DAILY_REWARD
     using HGameFoundation.Scripts.Features.DailyReward.DI;
     #endif
-
     using GameFoundation.Scripts.Addressable;
+    using GameFoundation.Scripts.EntityManager.DI;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
     using GameFoundation.Scripts.Features.Inventory.DI;
@@ -35,6 +35,7 @@ namespace GameFoundation.Scripts
             builder.Register<ObjectPoolManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.Register<SignalBus>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.RegisterMVP();
+            builder.RegisterEntityManager();
             builder.RegisterNewDayReset();
             builder.RegisterAudio();
             builder.RegisterLocalData();

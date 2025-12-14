@@ -4,6 +4,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Addressable;
     using UnityEngine;
+    using VContainer;
     using ZLinq;
     using Object = UnityEngine.Object;
 
@@ -11,11 +12,16 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
     {
         #region Inject
 
-        private readonly IAssetsManager assetsManager;
+        private readonly IAssetsManager  assetsManager;
+        private readonly IObjectResolver objectResolver;
 
-        public ObjectPoolManager(IAssetsManager assetsManager)
+        public ObjectPoolManager(
+            IAssetsManager  assetsManager,
+            IObjectResolver objectResolver
+        )
         {
-            this.assetsManager = assetsManager;
+            this.assetsManager  = assetsManager;
+            this.objectResolver = objectResolver;
         }
 
         #endregion
@@ -40,6 +46,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             for (var i = 0; i < capacity; i++)
             {
                 var instance = Object.Instantiate(pooler, this.pools[key].parent);
+                this.objectResolver.Inject(instance.GetComponent<T>());
                 instance.GetComponent<T>().key = key;
                 instance.GetComponent<T>().OnInstantiate();
                 var objInstance = instance.gameObject;
@@ -58,6 +65,18 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             obj.SetActive(true);
             obj.GetComponent<IPoolable>().OnSpawn().Forget();
             return obj.GetComponent<T>();
+        }
+        public T Spawn<T>(string key, Transform parent) where T : Object, IPoolable
+        {
+            var obj = this.Spawn<T>(key);
+            obj.tf.SetParent(parent);
+            return obj;
+        }
+        public T Spawn<T>(string key, Vector3 position, Quaternion rotation) where T : Object, IPoolable
+        {
+            var obj = this.Spawn<T>(key);
+            obj.tf.SetPositionAndRotation(position, rotation);
+            return obj;
         }
 
         public void Despawn(IPoolable pooler)
