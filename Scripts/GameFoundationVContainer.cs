@@ -4,6 +4,7 @@ namespace GameFoundation.Scripts
     using HGameFoundation.Scripts.Features.DailyReward.DI;
     #endif
     using GameFoundation.Scripts.Addressable;
+    using GameFoundation.Scripts.Blueprints.ScriptableObject.DI;
     using GameFoundation.Scripts.EntityManager.DI;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
@@ -43,6 +44,7 @@ namespace GameFoundation.Scripts
             builder.RegisterInternetChecking();
             builder.RegisterUserExperience();
             builder.RegisterInventory();
+            builder.RegisterSOBlueprint();
             #if DAILY_REWARD
             builder.RegisterDailyReward();
             #endif

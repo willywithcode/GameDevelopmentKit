@@ -10,6 +10,9 @@
     "Lofelt.NiceVibrations",
     "Unity.TextMeshPro",
     "DOTween.Modules",
-    "GameFoundation.Scripts.DI"
+    "GameFoundation.Scripts.DI",
+    "spine-csharp",
+    "spine-unity",
+    "spine-unity-editor"
   ]
 }
