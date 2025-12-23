@@ -30,7 +30,7 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
             }
 
             this.inventoryLocalDataService.AddItem(itemId, amount);
-            this.signalBus.Fire<OnInventoryValueChange>(new(itemId));
+            this.signalBus.Fire<OnInventoryValueChange>(new(itemId, amount));
         }
 
         public void PayItem(string itemId, int amount)
@@ -41,7 +41,7 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
             }
 
             this.inventoryLocalDataService.PayItem(itemId, amount);
-            this.signalBus.Fire<OnInventoryValueChange>(new(itemId));
+            this.signalBus.Fire<OnInventoryValueChange>(new(itemId, -amount));
         }
 
         public int GetItemAmount(string itemId) => this.inventoryLocalDataService.GetItemAmount(itemId);
