@@ -40,9 +40,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             this.Bind();
             this.view.transform.SetAsLastSibling();
             this.signalBus.Fire(new OpenPresenterSignal(this));
-            this.OnBeforeShow();
+            this.OnBeforeShow().Forget();
             this.view.Show();
-            this.OnAfterShow();
+            this.OnAfterShow().Forget();
         }
 
         public virtual void Close()
