@@ -34,14 +34,17 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.Service
             return this.scheduleRewardLocalDataService.GetRewardClaimedDates()[rewardIndex];
         }
 
-        public void ClaimReward(int rewardIndex)
+        public void ClaimReward(int rewardIndex, int multiplier = 1)
         {
             if (rewardIndex < 0 || rewardIndex >= this.scheduleRewardBlueprint.Rewards.Count) return;
             var rewardData            = this.scheduleRewardBlueprint.Rewards[rewardIndex];
             var lastClaimedTime       = this.GetLastRewardTime(rewardIndex);
             var hoursSinceLastClaimed = (DateTime.Now - lastClaimedTime).TotalHours;
             if (hoursSinceLastClaimed < rewardData.hoursToWait) return;
-            this.inventoryService.AddItem(rewardData.RewardId, rewardData.quantity);
+            foreach (var item in rewardData.items)
+            {
+                this.inventoryService.AddItem(item.RewardId, item.quantity * multiplier);
+            }
             this.scheduleRewardLocalDataService.SetRewardClaimedDate(rewardIndex, DateTime.Now);
         }
 

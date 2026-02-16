@@ -5,7 +5,6 @@ namespace GameFoundation.Scripts.Features.LiveFeature.LocalData
 
     public class LiveLocalData : ILocalData
     {
-        public int    Lives;
         public string StartLivesTimeStamp;
         public string InfinityStartTimeStamp;
         public string InfinityLivesTimeStamp;
@@ -14,7 +13,6 @@ namespace GameFoundation.Scripts.Features.LiveFeature.LocalData
 
         public void Reset()
         {
-            this.Lives                  = 0;
             this.StartLivesTimeStamp    = "";
             this.InfinityStartTimeStamp = "";
             this.InfinityLivesTimeStamp = "";
@@ -23,16 +21,6 @@ namespace GameFoundation.Scripts.Features.LiveFeature.LocalData
 
     public class LiveLocalDataService : BaseLocalDataService<LiveLocalData>
     {
-        public int Lives
-        {
-            get => this.Data.Lives;
-            set
-            {
-                this.Data.Lives = value;
-                this.Save();
-            }
-        }
-
         public string StartLivesTimeStamp
         {
             get => this.Data.StartLivesTimeStamp;

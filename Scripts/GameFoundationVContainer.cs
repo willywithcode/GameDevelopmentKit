@@ -45,7 +45,6 @@ namespace GameFoundation.Scripts
             builder.RegisterInternetChecking();
             builder.RegisterUserExperience();
             builder.RegisterInventory();
-            builder.RegisterLives();
             builder.RegisterSOBlueprint();
             #if DAILY_REWARD
             builder.RegisterDailyReward();

@@ -4,6 +4,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
     using System.Globalization;
     using System.Threading;
     using Cysharp.Threading.Tasks;
+    using GameFoundation.Scripts.Features.Inventory.Services;
     using GameFoundation.Scripts.Features.LiveFeature.LocalData;
     using GameFoundation.Scripts.Features.LiveFeature.Signals;
     using GameFoundation.Scripts.Patterns.SignalBus;
@@ -12,10 +13,12 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
     public class LiveService : IInitializable, IDisposable
     {
-        private const int MAX_LIVES        = 5;
-        private const int LIVES_RESET_TIME = 1800; // 30 minutes in seconds
+        private const string LIVE_ITEM_ID    = "live";
+        private const int    MAX_LIVES       = 5;
+        private const int    LIVES_RESET_TIME = 1800; // 30 minutes in seconds
 
         private readonly LiveLocalDataService localData;
+        private readonly IInventoryService    inventoryService;
         private readonly SignalBus             signalBus;
 
         private CancellationTokenSource tickCts;
@@ -23,18 +26,19 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
         private TimeSpan                infinityTime;
         private bool                    isInit;
 
-        public LiveService(LiveLocalDataService localData, SignalBus signalBus)
+        public LiveService(LiveLocalDataService localData, IInventoryService inventoryService, SignalBus signalBus)
         {
-            this.localData = localData;
-            this.signalBus = signalBus;
+            this.localData        = localData;
+            this.inventoryService = inventoryService;
+            this.signalBus        = signalBus;
         }
 
         public void Initialize()
         {
             // First-launch guard: give max lives if lives == 0 and no timestamp exists
-            if (this.localData.Lives == 0 && string.IsNullOrEmpty(this.localData.StartLivesTimeStamp))
+            if (this.GetLives() == 0 && string.IsNullOrEmpty(this.localData.StartLivesTimeStamp))
             {
-                this.localData.Lives = MAX_LIVES;
+                this.SetLives(MAX_LIVES);
             }
 
             this.CheckRewindTime();
@@ -53,10 +57,10 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
         // ───────── Public API ─────────
 
-        public int  GetLives()    => this.localData.Lives;
+        public int  GetLives()    => this.inventoryService.GetItemAmount(LIVE_ITEM_ID);
         public int  GetMaxLives() => MAX_LIVES;
-        public bool HasLives()    => this.localData.Lives > 0 || this.IsInfinityActive();
-        public bool IsFullLives() => this.localData.Lives >= MAX_LIVES;
+        public bool HasLives()    => this.GetLives() > 0 || this.IsInfinityActive();
+        public bool IsFullLives() => this.GetLives() >= MAX_LIVES;
 
         public bool IsInfinityActive()
         {
@@ -68,9 +72,9 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
         {
             if (this.IsInfinityActive()) return true;
 
-            if (this.localData.Lives <= 0) return false;
+            if (this.GetLives() <= 0) return false;
 
-            this.localData.Lives = Mathf.Max(this.localData.Lives - 1, 0);
+            this.inventoryService.PayItem(LIVE_ITEM_ID, 1);
             this.CheckLives();
             this.FireLivesChanged();
             return true;
@@ -78,9 +82,11 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
         public void AddLives(int amount)
         {
-            this.localData.Lives = Mathf.Min(this.localData.Lives + amount, MAX_LIVES);
+            var currentLives = this.GetLives();
+            var toAdd        = Mathf.Min(amount, MAX_LIVES - currentLives);
+            if (toAdd > 0) this.inventoryService.AddItem(LIVE_ITEM_ID, toAdd);
 
-            if (this.localData.Lives >= MAX_LIVES)
+            if (this.GetLives() >= MAX_LIVES)
             {
                 this.localData.StartLivesTimeStamp = "";
             }
@@ -105,7 +111,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
             }
 
             this.infinityTime = this.ParseInfinityTimeStamp() - DateTime.UtcNow;
-            this.localData.Lives = MAX_LIVES;
+            this.SetLives(MAX_LIVES);
             this.FireLivesChanged();
         }
 
@@ -129,7 +135,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
         private void CheckLives()
         {
-            if (string.IsNullOrEmpty(this.localData.StartLivesTimeStamp) && this.localData.Lives < MAX_LIVES)
+            if (string.IsNullOrEmpty(this.localData.StartLivesTimeStamp) && this.GetLives() < MAX_LIVES)
             {
                 this.localData.StartLivesTimeStamp =
                     DateTime.UtcNow.ToString(CultureInfo.InvariantCulture);
@@ -138,9 +144,9 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
         private void RefreshLives()
         {
-            if (this.localData.Lives >= MAX_LIVES || this.IsInfinityActive())
+            if (this.GetLives() >= MAX_LIVES || this.IsInfinityActive())
             {
-                this.localData.Lives = MAX_LIVES;
+                this.SetLives(MAX_LIVES);
                 this.localData.StartLivesTimeStamp = "";
                 return;
             }
@@ -187,11 +193,14 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
             var heartsToAdd = (int)(this.livesRefillTime.TotalSeconds / LIVES_RESET_TIME);
             if (heartsToAdd <= 0) return;
 
-            this.localData.Lives = Mathf.Min(this.localData.Lives + heartsToAdd, MAX_LIVES);
+            var currentLives = this.GetLives();
+            var newLives     = Mathf.Min(currentLives + heartsToAdd, MAX_LIVES);
+            var toAdd        = newLives - currentLives;
+            if (toAdd > 0) this.inventoryService.AddItem(LIVE_ITEM_ID, toAdd);
 
-            if (this.localData.Lives >= MAX_LIVES)
+            if (this.GetLives() >= MAX_LIVES)
             {
-                this.localData.Lives = MAX_LIVES;
+                this.SetLives(MAX_LIVES);
                 this.localData.StartLivesTimeStamp = "";
                 this.livesRefillTime = TimeSpan.Zero;
             }
@@ -238,7 +247,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
         private void UpdateTime()
         {
-            if (this.localData.Lives < MAX_LIVES
+            if (this.GetLives() < MAX_LIVES
                 && !string.IsNullOrEmpty(this.localData.StartLivesTimeStamp))
             {
                 this.livesRefillTime = DateTime.UtcNow - this.ParseLiveTimeStamp();
@@ -282,13 +291,23 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
             return end;
         }
 
+        // ───────── Inventory Helper ─────────
+
+        private void SetLives(int amount)
+        {
+            var current = this.GetLives();
+            var diff    = amount - current;
+            if (diff > 0) this.inventoryService.AddItem(LIVE_ITEM_ID, diff);
+            else if (diff < 0) this.inventoryService.PayItem(LIVE_ITEM_ID, -diff);
+        }
+
         // ───────── Signal Firing ─────────
 
         private void FireLivesChanged()
         {
             this.signalBus.Fire(new OnLivesChanged
             {
-                CurrentLives = this.localData.Lives,
+                CurrentLives = this.GetLives(),
                 MaxLives     = MAX_LIVES,
                 IsInfinity   = this.IsInfinityActive(),
             });

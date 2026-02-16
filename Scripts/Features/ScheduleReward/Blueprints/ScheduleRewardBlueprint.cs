@@ -13,10 +13,16 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.Blueprints
     [Serializable]
     public class ScheduleRewardData
     {
-        public int                  quantity;
-        public string               RewardId;
+        public List<RewardItem>     items;
         public int                  hoursToWait;
         public TypeOfScheduleReward typeOfScheduleReward;
+    }
+
+    [Serializable]
+    public class RewardItem
+    {
+        public string RewardId;
+        public int    quantity;
     }
 
     public enum TypeOfScheduleReward
