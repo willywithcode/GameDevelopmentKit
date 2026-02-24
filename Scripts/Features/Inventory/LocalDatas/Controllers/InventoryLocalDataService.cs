@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
 {
+    using System;
     using System.Collections.Generic;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.Inventory.Blueprints;
@@ -27,12 +28,21 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
             this.signalBus             = signalBus;
         }
 
-        private InventoryDefault inventoryDefault;
+        private InventoryDefault        inventoryDefault;
+        private Dictionary<string, int> itemLimits = new();
 
         public void Initialize()
         {
-            if (this.userExperienceService.GetTimePlayed() > 0) return;
             this.inventoryDefault = this.assetsManager.LoadAsset<InventoryDefault>("InventoryDefault");
+
+            foreach (var item in this.inventoryDefault.InventoryItems)
+            {
+                if (item.HasLimit)
+                    this.itemLimits[item.ItemId] = item.Limit;
+            }
+
+            if (this.userExperienceService.GetTimePlayed() > 0) return;
+
             foreach (var item in this.inventoryDefault.InventoryItems)
             {
                 if (this.Data.InventoryItems.ContainsKey(item.ItemId)) continue;
@@ -42,23 +52,27 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
             }
         }
 
-        public int GetItemAmount(string itemId)
-        {
-            return this.Data.InventoryItems.GetValueOrDefault(itemId, 0);
-        }
+        public int GetItemAmount(string itemId) => this.Data.InventoryItems.GetValueOrDefault(itemId, 0);
 
-        public void AddItem(string itemId, int amount)
+        public int GetItemLimit(string itemId) => this.itemLimits.GetValueOrDefault(itemId, -1);
+
+        // Returns the actual amount added (may be less than requested if a limit is hit).
+        public int AddItem(string itemId, int amount)
         {
+            var current   = this.Data.InventoryItems.GetValueOrDefault(itemId, 0);
+            var desired   = current + amount;
+            var clamped   = this.itemLimits.TryGetValue(itemId, out var limit) ? Math.Min(desired, limit) : desired;
+            var actualAdded = clamped - current;
+
+            if (actualAdded <= 0) return 0;
+
             if (this.Data.InventoryItems.ContainsKey(itemId))
-            {
-                this.Data.InventoryItems[itemId] += amount;
-            }
+                this.Data.InventoryItems[itemId] = clamped;
             else
-            {
-                this.Data.InventoryItems.Add(itemId, amount);
-            }
+                this.Data.InventoryItems.Add(itemId, clamped);
 
             this.Save();
+            return actualAdded;
         }
 
         public void PayItem(string itemId, int amount)

@@ -1,6 +1,7 @@
 namespace GameFoundation.Scripts.Features.Inventory.Blueprints
 {
     using System;
+    using Sirenix.OdinInspector;
     using UnityEngine;
 
     [CreateAssetMenu(fileName = "InventoryDefault", menuName = "HyperCasual/Inventory/InventoryDefault")]
@@ -14,5 +15,8 @@ namespace GameFoundation.Scripts.Features.Inventory.Blueprints
     {
         public string ItemId;
         public int    Amount;
+        public bool HasLimit;
+        [ShowIf(nameof(HasLimit))]
+        public int Limit;
     }
 }

@@ -29,8 +29,9 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
                 return;
             }
 
-            this.inventoryLocalDataService.AddItem(itemId, amount);
-            this.signalBus.Fire<OnInventoryValueChange>(new(itemId, amount));
+            var actualAdded = this.inventoryLocalDataService.AddItem(itemId, amount);
+            if (actualAdded > 0)
+                this.signalBus.Fire<OnInventoryValueChange>(new(itemId, actualAdded));
         }
 
         public void PayItem(string itemId, int amount)
@@ -45,6 +46,8 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
         }
 
         public int GetItemAmount(string itemId) => this.inventoryLocalDataService.GetItemAmount(itemId);
+
+        public int GetItemLimit(string itemId) => this.inventoryLocalDataService.GetItemLimit(itemId);
 
         public bool CanPayItem(string itemId, int amount)
         {
