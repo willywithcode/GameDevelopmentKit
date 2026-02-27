@@ -3,6 +3,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     using Cysharp.Threading.Tasks;
     using DG.Tweening;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
+    using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
     using GameFoundation.Scripts.Patterns.SignalBus;
     using UnityEngine;
@@ -185,12 +186,14 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             if (this.view == null) return;
             this.view.Show(haveAnimation);
+            this.signalBus.Fire(new OpenPresenterSignal(this));
         }
 
         protected virtual void OnHideWithAnim(bool haveAnimation)
         {
             if (this.view == null) return;
             this.view.Hide(haveAnimation);
+            this.signalBus.Fire(new HidePresenterSignal(this));
         }
 
         public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory,
@@ -218,12 +221,14 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             if (this.view == null) return;
             this.view.Show(haveAnimation);
+            this.signalBus.Fire(new OpenPresenterSignal(this));
         }
 
         protected virtual void OnHideWithAnim(bool haveAnimation)
         {
             if (this.view == null) return;
             this.view.Hide(haveAnimation);
+            this.signalBus.Fire(new HidePresenterSignal(this));
         }
     }
 }
