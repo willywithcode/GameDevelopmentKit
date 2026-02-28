@@ -76,9 +76,9 @@ namespace GameFoundation.Scripts.EntityManager.Core
 
         #region Spawn
 
-        public T Spawn<T>(string key) where T : Object, IEntity
+        public T Spawn<T>(string key, bool isUnique = false) where T : Object, IEntity
         {
-            if (!this.pools.ContainsKey(key)) this.CreatePool<T>(key);
+            if (!this.pools.ContainsKey(key)) this.CreatePool<T>(key, isUnique ? 1 : 10);
 
             var inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
             if (!inactiveObjs.Any()) this.CreatePool<T>(key, 1);
@@ -93,9 +93,9 @@ namespace GameFoundation.Scripts.EntityManager.Core
             return entity;
         }
 
-        public T Spawn<T>(string key, Vector3 position, Quaternion rotation) where T : Object, IEntity
+        public T Spawn<T>(string key, Vector3 position, Quaternion rotation, bool isUnique = false) where T : Object, IEntity
         {
-            var entity = this.Spawn<T>(key);
+            var entity = this.Spawn<T>(key, isUnique);
             entity.tf.SetPositionAndRotation(position, rotation);
             return entity;
         }
