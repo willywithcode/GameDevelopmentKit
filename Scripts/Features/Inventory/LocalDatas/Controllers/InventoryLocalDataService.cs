@@ -11,7 +11,7 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
     using GameFoundation.Scripts.Patterns.SignalBus;
     using VContainer.Unity;
 
-    public class InventoryLocalDataService : BaseLocalDataService<InventoryLocalData>, IInitializable
+    public class InventoryLocalDataService : ACTkBaseLocalDataService<InventoryLocalData>, IInitializable
     {
         private readonly IAssetsManager        assetsManager;
         private readonly UserExperienceService userExperienceService;

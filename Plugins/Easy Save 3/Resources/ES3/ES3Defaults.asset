@@ -15,9 +15,9 @@ MonoBehaviour:
   settings:
     _location: 0
     path: SaveFile.es3
-    encryptionType: 0
-    compressionType: 0
-    encryptionPassword: password
+    encryptionType: 1
+    compressionType: 1
+    encryptionPassword: Quantum123@
     directory: 0
     format: 0
     prettyPrint: 1
@@ -34,8 +34,40 @@ MonoBehaviour:
     referenceMode: 2
     serializationDepthLimit: 64
     assemblyNames:
-    - Assembly-CSharp-firstpass
+    - Animancer
+    - Animancer.Examples
+    - Animancer.FSM
     - Assembly-CSharp
+    - Cinemachine
+    - DOTween.Modules
+    - EasySave3
+    - ECM2
+    - Fenerax.JoystickPack
+    - Game.Scripts
+    - Game.Scripts.Editor
+    - GameFoundation.Scripts
+    - GameFoundation.Scripts.DI
+    - Lofelt.NiceVibrations
+    - Lofelt.NiceVibrations.Demo
+    - MemoryPack.Unity
+    - MoonSharp
+    - MoreMountains.Tools
+    - PaperIO.Scripts
+    - PaperIO.Scripts.DI
+    - R3.Unity
+    - R3.Unity.TextMeshPro
+    - R3.Unity.XRInteractionToolkit
+    - ThirdPartyService
+    - ThirdPartyService.DI
+    - UniTask
+    - UniTask.Addressables
+    - UniTask.DOTween
+    - UniTask.Linq
+    - UniTask.TextMeshPro
+    - VContainer
+    - ZLinq.Unity
+    - ZLinq.Unity.UnityCollectoins
+    - ZString
     showAdvancedSettings: 0
   addMgrToSceneAutomatically: 0
   autoUpdateReferences: 1
