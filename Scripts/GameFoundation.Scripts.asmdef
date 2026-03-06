@@ -11,6 +11,8 @@
     "Unity.TextMeshPro",
     "DOTween.Modules",
     "EasySave3",
+    "ACTk.Runtime",
+    "MoreMountains.Tools",
     "GameFoundation.Scripts.DI",
     "spine-csharp",
     "spine-unity",

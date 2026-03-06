@@ -14,5 +14,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         public bool IsMusicOn();
         public void SetSfxVolume(float volume);
         public void SetMusicVolume(float volume);
+        public void CrossfadeMusic(string audioId, float duration = 1f);
+        public void DuckMusic(float targetVolume, float restoreDelay = 1f);
     }
 }
