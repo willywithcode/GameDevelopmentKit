@@ -13,6 +13,7 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Features.LiveFeature.DI;
     using GameFoundation.Scripts.Features.NewDayReset.DI;
     using GameFoundation.Scripts.Features.UserExperience.DI;
+    using GameFoundation.Scripts.Features.PushNotification.DI;
     using GameFoundation.Scripts.Features.Vibration.DI;
     using GameFoundation.Scripts.LocalData.DI;
     using GameFoundation.Scripts.Patterns.MVP.DI;
@@ -41,6 +42,7 @@ namespace GameFoundation.Scripts
             builder.RegisterEntityManager();
             builder.RegisterNewDayReset();
             builder.RegisterAntiCheat();
+            builder.RegisterPush();
             builder.RegisterAudio();
             builder.RegisterLocalData();
             builder.RegisterVibration();
