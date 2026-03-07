@@ -9,11 +9,13 @@ namespace GameFoundation.Scripts.Features.PushNotification.DI
     {
         public static void RegisterPush(this IContainerBuilder builder)
         {
+            #if PUSH_NOTIFICATION
             #if ONE_SIGNAL
             builder.Register<OneSignalPushService>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             #endif
             builder.Register<PushScheduler>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.Register<PushDeepLinkHandler>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
+            #endif
         }
     }
 }

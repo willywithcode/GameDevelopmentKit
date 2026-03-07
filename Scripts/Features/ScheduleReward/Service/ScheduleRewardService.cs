@@ -5,6 +5,7 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.Service
     using GameFoundation.Scripts.Features.Inventory.Services;
     using GameFoundation.Scripts.Features.ScheduleReward.Blueprints;
     using GameFoundation.Scripts.Features.ScheduleReward.LocalDatas;
+    using R3;
 
     public class ScheduleRewardService
     {
@@ -54,6 +55,15 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.Service
             var lastClaimedTime       = this.GetLastRewardTime(rewardIndex);
             var hoursSinceLastClaimed = (DateTime.Now - lastClaimedTime).TotalHours;
             return hoursSinceLastClaimed >= this.scheduleRewardBlueprint.Rewards[rewardIndex].hoursToWait;
+        }
+
+        // Emits only when the claimable state changes. Checks every <interval> (default 1s).
+        public Observable<bool> ObserveCanClaimReward(int rewardIndex, TimeSpan interval = default)
+        {
+            var checkInterval = interval == default ? TimeSpan.FromSeconds(1) : interval;
+            return Observable.Interval(checkInterval)
+                             .Select(_ => this.CanClaimReward(rewardIndex))
+                             .DistinctUntilChanged();
         }
 
         public ScheduleRewardData GetRewardData(int rewardIndex)
