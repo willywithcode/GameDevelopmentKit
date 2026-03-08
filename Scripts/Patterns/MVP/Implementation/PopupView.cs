@@ -176,6 +176,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
     public class PopupPresenter<T> : BasePresenter<T> where T : PopupView
     {
+        public override PresenterType Type => PresenterType.Popup;
+
         protected override UniTask OnBeforeShow()
         {
             this.OnShowWithAnim(true);
@@ -200,16 +202,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             signalBus, uiCanvas) { }
     }
 
-    public class PopupPresenter<TView, TModel> : PopupPresenter<TView> where TView : PopupView
+    public class PopupPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : PopupView
     {
-        protected TModel model;
-        public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(
-            viewFactory, signalBus, uiCanvas) { }
-
-        public void SetModel(TModel model)
-        {
-            this.model = model;
-        }
+        public override PresenterType Type => PresenterType.Popup;
 
         protected override UniTask OnBeforeShow()
         {
@@ -230,5 +225,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             this.view.Hide(haveAnimation);
             this.signalBus.Fire(new HidePresenterSignal(this));
         }
+
+        public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
     }
 }

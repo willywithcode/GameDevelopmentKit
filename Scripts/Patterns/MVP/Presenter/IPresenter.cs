@@ -4,12 +4,17 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
     public interface IPresenter
     {
+        public PresenterType Type { get; }
         public void Open();
         public void Close();
         public void Destroy();
         public bool IsOpen { get; }
         public IView View { get; }
 
+    }
+    public interface IPresenter<TModel> : IPresenter 
+    {
+        public void SetModel(TModel model);
     }
     public enum PresenterType
     {

@@ -6,6 +6,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
     using GameFoundation.Scripts.Extenstions;
     using GameFoundation.Scripts.Patterns.MVP.Attribute;
     using GameFoundation.Scripts.Patterns.MVP.Implementation;
+    using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using UnityEngine;
     using VContainer;
     using ZLinq;
@@ -13,7 +14,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
 
     public interface IViewFactory
     {
-        T    CreateView<T>(Type typePresenter) where T : BaseView;
+        T    CreateView<T>(IPresenter typePresenter) where T : BaseView;
         T    CreateView<T>(Transform parent) where T : BaseView;
         void ReturnToPool<T>(T       view) where T : BaseView;
     }
@@ -34,30 +35,22 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
             this.uiCanvas      = uiCanvas;
         }
 
-        public TView CreateView<TView>(Type presenterType) where TView : BaseView
+        public TView CreateView<TView>(IPresenter presenter) where TView : BaseView
         {
             var parentTransform = this.uiCanvas.transform;
-            var isOverlayPresenter = presenterType.GetBaseTypes()
-                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OverlayPresenter<>));
-            var isPopupPresenter = presenterType.GetBaseTypes()
-                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(PopupPresenter<>));
-            var isScreenPresenter = presenterType.GetBaseTypes()
-                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ScreenPresenter<>));
-            var isSplashPresenter = presenterType.GetBaseTypes()
-                .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SplashPresenter<>));
-            if (isOverlayPresenter)
+            if (presenter.Type == PresenterType.Overlay)
             {
                 parentTransform = this.uiCanvas.OverlayTransform;
             }
-            else if (isPopupPresenter)
+            else if (presenter.Type == PresenterType.Popup)
             {
                 parentTransform = this.uiCanvas.PopupTransform;
             }
-            else if (isScreenPresenter)
+            else if (presenter.Type == PresenterType.Screen)
             {
                 parentTransform = this.uiCanvas.ScreenTransform;
             }
-            else if (isSplashPresenter)
+            else if (presenter.Type == PresenterType.Splash)
             {
                 parentTransform = this.uiCanvas.SplashTransform;
             }

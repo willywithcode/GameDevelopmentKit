@@ -30,11 +30,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         protected TView view;
 
+        public abstract PresenterType Type { get; }
+
         public virtual void Open()
         {
             if (this.view == null)
             {
-                this.view = this.viewFactory.CreateView<TView>(this.GetType());
+                this.view = this.viewFactory.CreateView<TView>(this);
                 this.Ready();
             }
             this.Bind();
@@ -48,9 +50,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
         public virtual void Close()
         {
             this.signalBus.Fire(new HidePresenterSignal(this));
-            this.OnBeforeHide();
+            this.OnBeforeHide().Forget();
             this.view.Hide();
-            this.OnAfterHide();
+            this.OnAfterHide().Forget();
         }
 
         public void Destroy()
@@ -95,7 +97,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
         }
     }
 
-    public abstract class BasePresenter<TView, TModel> : BasePresenter<TView>
+    public abstract class BasePresenter<TView, TModel> : BasePresenter<TView>, IPresenter<TModel>
         where TView : BaseView
     {
         protected TModel model;

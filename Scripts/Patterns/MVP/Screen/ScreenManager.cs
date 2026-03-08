@@ -52,11 +52,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
                 this.presenters[presenterType] = presenter;
             }
 
-            var setModelMethod = presenter.GetType().GetMethod("SetModel", new[] { typeof(TModel) });
-            if (setModelMethod != null)
-            {
-                setModelMethod.Invoke(presenter, new object[] { model });
-            }
+            if (presenter is IPresenter<TModel> presenterWithModel)
+                presenterWithModel.SetModel(model);
             presenter.Open();
         }
 
@@ -82,20 +79,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
         {
             foreach (var presenter in this.presenters.Values)
             {
-                var presenterType = presenter.GetType();
-                var isOfType = type switch
-                {
-                    PresenterType.Screen => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ScreenPresenter<>)),
-                    PresenterType.Popup => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(PopupPresenter<>)),
-                    PresenterType.Overlay => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OverlayPresenter<>)),
-                    PresenterType.Splash => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SplashPresenter<>)),
-                    _ => false
-                };
-                if (isOfType) presenter.Close();
+                if(presenter.Type == type) presenter.Close();
             }
         }
 

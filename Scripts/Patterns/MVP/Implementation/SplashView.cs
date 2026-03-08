@@ -256,17 +256,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             if (this.view == null) return;
             this.view.CancelLoadingOperation();
         }
+
+        public override PresenterType Type => PresenterType.Splash;
     }
 
-    public class SplashPresenter<TView, TModel> : SplashPresenter<TView> where TView : SplashView
+    public class SplashPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : SplashView
     {
-        protected TModel model;
         public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
-
-        public void SetModel(TModel model)
-        {
-            this.model = model;
-        }
 
         protected virtual async UniTask OnShow(bool haveAnimation)
         {
@@ -291,5 +287,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             if (this.view == null) return;
             this.view.CancelLoadingOperation();
         }
+
+        public override PresenterType Type => PresenterType.Splash;
     }
 }
