@@ -5,45 +5,36 @@ namespace GameFoundation.Scripts.Patterns.SignalBus
 
     public class SignalBus
     {
-        private readonly Dictionary<Type, List<Delegate>> _subscribers = new();
+        private abstract class HandlerBase { }
 
-        public void Subscribe<T>(Action<T> callback)
+        private sealed class Handler<T> : HandlerBase
         {
-            var type = typeof(T);
-            if (!this._subscribers.ContainsKey(type))
-            {
-                this._subscribers[type] = new List<Delegate>();
-            }
-            this._subscribers[type].Add(callback);
+            public Action<T> Typed;
+            public Action    NoParam;
         }
 
-        public void Unsubscribe<T>(Action<T> callback)
+        private readonly Dictionary<Type, HandlerBase> _handlers = new();
+
+        private Handler<T> GetOrCreate<T>()
         {
-            var type = typeof(T);
-            if (this._subscribers.TryGetValue(type, out var subscriber))
-            {
-                subscriber.Remove(callback);
-            }
+            if (!this._handlers.TryGetValue(typeof(T), out var h))
+                this._handlers[typeof(T)] = h = new Handler<T>();
+            return (Handler<T>)h;
         }
 
-        public void UnsubscribeAll<T>()
-        {
-            var type = typeof(T);
-            if (this._subscribers.ContainsKey(type))
-            {
-                this._subscribers.Remove(type);
-            }
-        }
+        public void Subscribe<T>(Action<T> callback)   => this.GetOrCreate<T>().Typed   += callback;
+        public void Subscribe<T>(Action callback)      => this.GetOrCreate<T>().NoParam += callback;
+        public void Unsubscribe<T>(Action<T> callback) => this.GetOrCreate<T>().Typed   -= callback;
+        public void Unsubscribe<T>(Action callback)    => this.GetOrCreate<T>().NoParam -= callback;
+
+        public void UnsubscribeAll<T>() => this._handlers.Remove(typeof(T));
 
         public void Fire<T>(T signal)
         {
-            var type = typeof(T);
-            if (!this._subscribers.TryGetValue(type, out var subscriber)) return;
-            var subscribersCopy = new List<Delegate>(subscriber);
-            foreach (var callback in subscribersCopy)
-            {
-                ((Action<T>)callback)?.Invoke(signal);
-            }
+            if (!this._handlers.TryGetValue(typeof(T), out var h)) return;
+            var handler = (Handler<T>)h;
+            handler.Typed?.Invoke(signal);
+            handler.NoParam?.Invoke();
         }
     }
 }
