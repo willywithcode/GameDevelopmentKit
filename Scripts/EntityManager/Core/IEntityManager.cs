@@ -7,14 +7,11 @@ namespace GameFoundation.Scripts.EntityManager.Core
         T       Spawn<T>(string      key, bool isUnique = false) where T : Object, IEntity;
         T       Spawn<T>(string      key, Vector3 position, Quaternion rotation, bool isUnique = false) where T : Object, IEntity;
         void    Despawn(IEntity      entity);
-        void    DespawnAll<T>() where T : Object, IEntity;
+        void    DespawnAll<T>(string key) where T : Object, IEntity;
         bool    IsInitialized(string key);
         List<T> GetAll<T>(string     key) where T : Object, IEntity;
-
-        // ECS-Lite additions
         IEntity       GetById(int id);
         List<IEntity> GetEntitiesWithComponent<T>() where T : struct, IComponent;
-        void          Tick(float deltaTime); // Update all entities
 
     }
 }

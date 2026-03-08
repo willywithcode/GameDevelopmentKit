@@ -29,7 +29,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
         #endregion
 
         private Transform                                                         poolRoot;
-        private Dictionary<string, (Transform parent, List<GameObject> elements)> pools    = new();
+        private Dictionary<string, (Transform parent, List<IEntity> elements)> pools    = new();
         private Dictionary<int, IEntity>                                          entities = new();
         private Dictionary<Type, IComponentArray>                                 componentArrays = new();
         private int                                                               nextId;
@@ -51,7 +51,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
             {
                 var poolParent = new GameObject(typeof(T).Name + "_" + key).transform;
                 poolParent.SetParent(this.poolRoot);
-                this.pools.Add(key, (poolParent, new List<GameObject>()));
+                this.pools.Add(key, (poolParent, new List<IEntity>()));
             }
 
             var prefab = this.assetsManager.LoadAsset<GameObject>(key);
@@ -68,7 +68,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
                 this.entities[entity.Id] = entity;
 
                 instance.SetActive(false);
-                this.pools[key].elements.Add(instance);
+                this.pools[key].elements.Add(entity);
             }
         }
 
@@ -80,17 +80,16 @@ namespace GameFoundation.Scripts.EntityManager.Core
         {
             if (!this.pools.ContainsKey(key)) this.CreatePool<T>(key, isUnique ? 1 : 10);
 
-            var inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
+            var inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.tf.gameObject.activeSelf);
             if (!inactiveObjs.Any()) this.CreatePool<T>(key, 1);
 
-            inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
+            inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.tf.gameObject.activeSelf);
             var obj    = inactiveObjs.First();
-            var entity = obj.GetComponent<T>();
 
-            obj.SetActive(true);
-            entity.OnSpawn().Forget();
+            obj.tf.gameObject.SetActive(true);
+            obj.OnSpawn().Forget();
 
-            return entity;
+            return (T)obj;
         }
 
         public T Spawn<T>(string key, Vector3 position, Quaternion rotation, bool isUnique = false) where T : Object, IEntity
@@ -117,18 +116,17 @@ namespace GameFoundation.Scripts.EntityManager.Core
             entity.tf.SetParent(this.pools[entity.Key].parent);
         }
 
-        public void DespawnAll<T>() where T : Object, IEntity
+        public void DespawnAll<T>(string key) where T : Object, IEntity
         {
-            var key = typeof(T).Name;
             if (!this.pools.ContainsKey(key)) return;
 
             foreach (var obj in this.pools[key].elements)
             {
-                if (!obj.activeSelf) continue;
+                if (!obj.tf.gameObject.activeSelf) continue;
 
-                obj.SetActive(false);
-                obj.transform.SetParent(this.pools[key].parent);
-                obj.GetComponent<IEntity>().OnDespawn().Forget();
+                obj.tf.gameObject.SetActive(false);
+                obj.tf.SetParent(this.pools[key].parent);
+                obj.OnDespawn().Forget();
             }
         }
 
@@ -152,9 +150,9 @@ namespace GameFoundation.Scripts.EntityManager.Core
             var list = new List<T>();
             foreach (var obj in this.pools[key].elements)
             {
-                if (obj.activeSelf)
+                if (obj.tf.gameObject.activeSelf)
                 {
-                    list.Add(obj.GetComponent<T>());
+                    list.Add(obj as T);
                 }
             }
             return list;
@@ -162,7 +160,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
 
         public IEntity GetById(int id)
         {
-            return this.entities.TryGetValue(id, out var entity) ? entity : null;
+            return this.entities.GetValueOrDefault(id);
         }
 
         public List<IEntity> GetEntitiesWithComponent<T>() where T : struct, IComponent
@@ -176,16 +174,6 @@ namespace GameFoundation.Scripts.EntityManager.Core
                 }
             }
             return result;
-        }
-        public void Tick(float deltaTime)
-        {
-            foreach (var kvp in this.entities)
-            {
-                if (kvp.Value.IsActive)
-                {
-                    kvp.Value.OnTick(deltaTime).Forget();
-                }
-            }
         }
 
         #endregion

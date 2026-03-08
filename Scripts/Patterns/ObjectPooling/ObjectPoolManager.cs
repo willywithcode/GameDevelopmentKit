@@ -27,7 +27,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
         #endregion
 
         private Transform                                                         pool;
-        private Dictionary<string, (Transform parent, List<GameObject> elements)> pools = new();
+        private Dictionary<string, (Transform parent, List<IPoolable> elements)> pools = new();
 
         public void CreatePool<T>(string key, int capacity = 10) where T : Object, IPoolable
         {
@@ -46,25 +46,25 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             for (var i = 0; i < capacity; i++)
             {
                 var instance = Object.Instantiate(pooler, this.pools[key].parent);
-                this.objectResolver.Inject(instance.GetComponent<T>());
-                instance.GetComponent<T>().key = key;
-                instance.GetComponent<T>().OnInstantiate();
-                var objInstance = instance.gameObject;
-                objInstance.SetActive(false);
-                this.pools[key].elements.Add(objInstance);
+                var objPool = instance.GetComponent<T>();
+                this.objectResolver.Inject(objPool);
+                objPool.key = key;
+                objPool.OnInstantiate();
+                instance.gameObject.SetActive(false);
+                this.pools[key].elements.Add(objPool);
             }
         }
 
         public T Spawn<T>(string key) where T : Object, IPoolable
         {
             if (!this.pools.ContainsKey(key)) this.CreatePool<T>(key);
-            var inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
+            var inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.tf.gameObject.activeSelf);
             if (!inactiveObjs.Any()) this.CreatePool<T>(key, 1);
-            inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.activeSelf);
+            inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.tf.gameObject.activeSelf);
             var obj = inactiveObjs.First();
-            obj.SetActive(true);
-            obj.GetComponent<IPoolable>().OnSpawn().Forget();
-            return obj.GetComponent<T>();
+            obj.tf.gameObject.SetActive(true);
+
+            return obj as T;
         }
         public T Spawn<T>(string key, Transform parent) where T : Object, IPoolable
         {
@@ -91,14 +91,14 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             pooler.tf.SetParent(this.pools[pooler.key].parent);
         }
 
-        public void DespawnAll<T>() where T : Object, IPoolable
+        public void DespawnAll<T>(string key) where T : Object, IPoolable
         {
-            if (!this.pools.ContainsKey(typeof(T).Name)) return;
-            foreach (var obj in this.pools[typeof(T).Name].elements)
+            if (!this.pools.ContainsKey(key)) return;
+            foreach (var obj in this.pools[key].elements)
             {
-                obj.SetActive(false);
-                obj.transform.SetParent(this.pools[typeof(T).Name].parent);
-                obj.GetComponent<IPoolable>().OnDespawn().Forget();
+                obj.tf.gameObject.SetActive(false);
+                obj.tf.SetParent(this.pools[key].parent);
+                obj.OnDespawn().Forget();
             }
         }
 
@@ -118,9 +118,12 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
                 var list = new List<T>();
                 foreach (var obj in this.pools[key].elements)
                 {
-                    if (obj.activeSelf)
+                    if (obj.tf.gameObject.activeSelf)
                     {
-                        list.Add(obj.GetComponent<T>());
+                        if (obj is T tObj)
+                        {
+                            list.Add(tObj);
+                        }
                     }
                 }
                 return list;

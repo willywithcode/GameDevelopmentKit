@@ -11,7 +11,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
 
         public int    Id       { get; set; }
         public string Key      { get; set; }
-        public bool   IsActive { get => this.gameObject.activeSelf; }
+        public bool   IsActive => this.gameObject.activeSelf;
         public Transform tf
         {
             get
