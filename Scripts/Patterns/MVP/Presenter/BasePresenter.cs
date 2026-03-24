@@ -55,7 +55,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             this.OnAfterHide().Forget();
         }
 
-        public void Destroy()
+        public virtual void Destroy()
         {
             this.DestroyView();
         }
