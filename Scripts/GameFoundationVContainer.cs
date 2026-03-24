@@ -12,8 +12,9 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Features.Inventory.DI;
     using GameFoundation.Scripts.Features.LiveFeature.DI;
     using GameFoundation.Scripts.Features.NewDayReset.DI;
-    using GameFoundation.Scripts.Features.UserExperience.DI;
+    using GameFoundation.Scripts.Features.Profile.DI;
     using GameFoundation.Scripts.Features.PushNotification.DI;
+    using GameFoundation.Scripts.Features.UserExperience.DI;
     using GameFoundation.Scripts.Features.Vibration.DI;
     using GameFoundation.Scripts.LocalData.DI;
     using GameFoundation.Scripts.Patterns.MVP.DI;
@@ -49,6 +50,7 @@ namespace GameFoundation.Scripts
             builder.RegisterInternetChecking();
             builder.RegisterUserExperience();
             builder.RegisterInventory();
+            builder.RegisterProfile();
             builder.RegisterSOBlueprint();
             #if DAILY_REWARD
             builder.RegisterDailyReward();
