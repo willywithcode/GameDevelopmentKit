@@ -30,7 +30,7 @@ namespace GameFoundation.Scripts.Features.Profile.LocalData
         }
     }
 
-    public class ProfileLocalDataService : ES3BaseLocalDataService<ProfileLocalData>
+    public class ProfileLocalDataService : ACTkBaseLocalDataService<ProfileLocalData>
     {
         public bool HasProfile => !string.IsNullOrWhiteSpace(this.Data.PlayerId);
 
