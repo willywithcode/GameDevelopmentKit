@@ -44,6 +44,7 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Services
         public async UniTask RefreshEntries()
         {
             this.cachedEntries = await this.provider.FetchEntries();
+            this.ResolveAvatarAddresses();
             this.signalBus.Fire(new OnLeaderBoardUpdated(this.cachedEntries));
         }
 
@@ -74,6 +75,17 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Services
                 localProvider.EntriesChanged -= this.OnProviderEntriesChanged;
 
             this.provider.Dispose();
+        }
+
+        private void ResolveAvatarAddresses()
+        {
+            foreach (var entry in this.cachedEntries)
+            {
+                // Only resolve if the provider didn't already set an address
+                // (a remote provider might return full URLs directly)
+                if (string.IsNullOrEmpty(entry.AvatarAddress))
+                    entry.AvatarAddress = this.profileService.GetAvatarAddress(entry.AvatarIndex);
+            }
         }
 
         private void OnProviderEntriesChanged()

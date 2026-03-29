@@ -8,11 +8,12 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.LocalData
     [Serializable]
     public class LeaderBoardEntry
     {
-        public string PlayerId    { get; set; } = string.Empty;
-        public string DisplayName { get; set; } = string.Empty;
-        public int    AvatarIndex { get; set; }
-        public int    Score       { get; set; }
-        public bool   IsPlayer   { get; set; }
+        public string PlayerId      { get; set; } = string.Empty;
+        public string DisplayName   { get; set; } = string.Empty;
+        public int    AvatarIndex   { get; set; }
+        public string AvatarAddress { get; set; } = string.Empty;
+        public int    Score         { get; set; }
+        public bool   IsPlayer     { get; set; }
     }
 
     public class LeaderBoardLocalData : ILocalData
