@@ -69,6 +69,12 @@ namespace GameFoundation.Scripts.EntityManager.Core
 
                 instance.SetActive(false);
                 this.pools[key].elements.Add(entity);
+                var childrenEntity = instance.GetComponentsInChildren<IEntity>(true);
+
+                foreach (var childEntity in childrenEntity)
+                {
+                    this.objectResolver.Inject(childEntity);
+                }
             }
         }
 
