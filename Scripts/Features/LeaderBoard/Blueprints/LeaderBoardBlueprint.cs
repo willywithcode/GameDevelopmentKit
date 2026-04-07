@@ -54,9 +54,11 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Blueprints
         };
     }
 
+    #if LEADERBOARD
     [SOBlueprintAttributes(nameof(LeaderBoardBlueprint))]
     public class LeaderBoardBlueprintService : BaseSOBlueprintService<LeaderBoardBlueprint>
     {
         public LeaderBoardBlueprintService(IAssetsManager assetsManager) : base(assetsManager) { }
     }
+    #endif
 }

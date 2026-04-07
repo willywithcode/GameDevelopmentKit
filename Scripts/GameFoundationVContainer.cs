@@ -10,7 +10,9 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
     using GameFoundation.Scripts.Features.Inventory.DI;
+    #if LEADERBOARD
     using GameFoundation.Scripts.Features.LeaderBoard.DI;
+    #endif
     using GameFoundation.Scripts.Features.LiveFeature.DI;
     using GameFoundation.Scripts.Features.NewDayReset.DI;
     using GameFoundation.Scripts.Features.Profile.DI;
@@ -52,7 +54,9 @@ namespace GameFoundation.Scripts
             builder.RegisterUserExperience();
             builder.RegisterInventory();
             builder.RegisterProfile();
+            #if LEADERBOARD
             builder.RegisterLeaderBoard();
+            #endif
             builder.RegisterSOBlueprint();
             #if DAILY_REWARD
             builder.RegisterDailyReward();

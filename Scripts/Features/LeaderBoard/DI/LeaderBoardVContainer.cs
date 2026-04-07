@@ -1,3 +1,4 @@
+#if LEADERBOARD
 namespace GameFoundation.Scripts.Features.LeaderBoard.DI
 {
     using GameFoundation.Scripts.Features.LeaderBoard.Services;
@@ -14,3 +15,4 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.DI
         }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if LEADERBOARD
 namespace GameFoundation.Scripts.Features.LeaderBoard.Services
 {
     using System.Collections.Generic;
@@ -11,3 +12,4 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Services
         void Dispose();
     }
 }
+#endif

@@ -30,6 +30,7 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.LocalData
         }
     }
 
+    #if LEADERBOARD
     public class LeaderBoardLocalDataService : ACTkBaseLocalDataService<LeaderBoardLocalData>
     {
         public List<LeaderBoardEntry> Entries          => this.Data.Entries;
@@ -48,4 +49,5 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.LocalData
             this.Save();
         }
     }
+    #endif
 }

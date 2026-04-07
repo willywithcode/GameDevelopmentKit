@@ -1,3 +1,4 @@
+#if LEADERBOARD
 namespace GameFoundation.Scripts.Features.LeaderBoard.Services
 {
     using System;
@@ -182,3 +183,4 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Services
         }
     }
 }
+#endif

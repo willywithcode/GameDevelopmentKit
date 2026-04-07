@@ -1,3 +1,4 @@
+#if LEADERBOARD
 namespace GameFoundation.Scripts.Features.LeaderBoard.Signals
 {
     using System.Collections.Generic;
@@ -13,3 +14,4 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Signals
         }
     }
 }
+#endif
