@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 {
+    using System.Threading;
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
@@ -36,56 +37,101 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         protected TView view;
 
+        private CancellationTokenSource lifetimeCts;
+
+        /// <summary>
+        /// Cancelled when the presenter is closed or destroyed. Use this token in awaits
+        /// inside OnBeforeShow/OnAfterShow/OnBeforeHide/OnAfterHide to abort pending work
+        /// when the user closes the view early.
+        /// </summary>
+        protected CancellationToken LifetimeToken => this.lifetimeCts?.Token ?? CancellationToken.None;
+
         public abstract PresenterType Type { get; }
-
-        public virtual void Open()
-        {
-            if (this.view == null)
-            {
-                this.view = this.viewFactory.CreateView<TView>(this);
-                this.Ready();
-            }
-            this.Bind();
-            this.view.transform.SetAsLastSibling();
-            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
-            this.OnBeforeShow().Forget();
-            this.view.Show();
-            this.OnAfterShow().Forget();
-        }
-
-        public virtual void Close()
-        {
-            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
-            this.OnBeforeHide().Forget();
-            this.view.Hide();
-            this.OnAfterHide().Forget();
-        }
-
-        public virtual void Destroy()
-        {
-            this.DestroyView();
-        }
 
         public bool  IsOpen => this.view != null && this.view.gameObject.activeInHierarchy;
         public IView View   => this.view;
 
-        protected virtual void Bind() { }
+        public virtual void Open()              => this.OpenAsync(true).Forget();
+        public virtual void Open(bool animate)  => this.OpenAsync(animate).Forget();
+        public virtual void Close()             => this.CloseAsync(true).Forget();
+        public virtual void Close(bool animate) => this.CloseAsync(animate).Forget();
 
-        protected virtual void Ready()
+        public virtual async UniTask OpenAsync(bool animate = true)
         {
-            this.AssignButtonClickEffect();
+            this.CancelLifetime();
+            this.lifetimeCts = new CancellationTokenSource();
+            var ct = this.lifetimeCts.Token;
+
+            if (this.view == null)
+            {
+                this.view = await this.viewFactory.CreateViewAsync<TView>(this);
+                this.Ready();
+            }
+
+            this.RebindButtonClickEffect();
+            this.Bind();
+            this.view.transform.SetAsLastSibling();
+            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
+
+            try
+            {
+                await this.OnBeforeShow();
+                ct.ThrowIfCancellationRequested();
+                await this.view.Show(animate);
+                ct.ThrowIfCancellationRequested();
+                await this.OnAfterShow();
+            }
+            catch (System.OperationCanceledException) { }
         }
 
-        protected virtual async UniTask OnBeforeShow() { }
-        protected virtual async UniTask OnAfterShow()  { }
-        protected virtual async UniTask OnBeforeHide() { }
-        protected virtual async UniTask OnAfterHide()  { }
+        public virtual async UniTask CloseAsync(bool animate = true)
+        {
+            this.CancelLifetime();
+            this.lifetimeCts = new CancellationTokenSource();
+            var ct = this.lifetimeCts.Token;
 
-        private void AssignButtonClickEffect()
+            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
+
+            try
+            {
+                await this.OnBeforeHide();
+                ct.ThrowIfCancellationRequested();
+                await this.view.Hide(animate);
+                ct.ThrowIfCancellationRequested();
+                await this.OnAfterHide();
+            }
+            catch (System.OperationCanceledException) { }
+        }
+
+        public virtual void Destroy()
+        {
+            this.CancelLifetime();
+            this.DestroyView();
+        }
+
+        private void CancelLifetime()
+        {
+            if (this.lifetimeCts == null) return;
+            this.lifetimeCts.Cancel();
+            this.lifetimeCts.Dispose();
+            this.lifetimeCts = null;
+        }
+
+        protected virtual void Bind() { }
+
+        protected virtual void Ready() { }
+
+        protected virtual UniTask OnBeforeShow() => UniTask.CompletedTask;
+        protected virtual UniTask OnAfterShow()  => UniTask.CompletedTask;
+        protected virtual UniTask OnBeforeHide() => UniTask.CompletedTask;
+        protected virtual UniTask OnAfterHide()  => UniTask.CompletedTask;
+
+        private void RebindButtonClickEffect()
         {
             var buttons = this.view.GetComponentsInChildren<Button>(true);
             foreach (var button in buttons)
             {
+                button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() =>
                 {
                     this.buttonClickPublisher.Publish(new OnButtonClickSignal());
@@ -100,25 +146,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
                 this.viewFactory.ReturnToPool(this.view);
                 this.view = null;
             }
-        }
-    }
-
-    public abstract class BasePresenter<TView, TModel> : BasePresenter<TView>, IPresenter<TModel>
-        where TView : BaseView
-    {
-        protected TModel model;
-
-        protected BasePresenter(
-            IViewFactory                  viewFactory,
-            UICanvas                      uiCanvas,
-            IPublisher<OpenPresenterSignal> openPresenterPublisher,
-            IPublisher<HidePresenterSignal> hidePresenterPublisher,
-            IPublisher<OnButtonClickSignal> buttonClickPublisher
-        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
-
-        public void SetModel(TModel model)
-        {
-            this.model = model;
         }
     }
 }

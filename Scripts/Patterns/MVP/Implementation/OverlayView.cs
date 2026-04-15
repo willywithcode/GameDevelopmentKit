@@ -23,8 +23,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public override PresenterType Type => PresenterType.Overlay;
     }
 
-    public class OverlayPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : OverlayView
+    public class OverlayPresenter<TView, TModel> : OverlayPresenter<TView>, IPresenter<TModel>
+        where TView : OverlayView
     {
+        protected TModel model;
+
         public OverlayPresenter(
             IViewFactory                  viewFactory,
             UICanvas                      uiCanvas,
@@ -33,6 +36,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             IPublisher<OnButtonClickSignal> buttonClickPublisher
         ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
 
-        public override PresenterType Type => PresenterType.Overlay;
+        public void SetModel(TModel model) => this.model = model;
     }
 }

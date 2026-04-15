@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Patterns.MVP.View
 {
+    using Cysharp.Threading.Tasks;
     using UnityEngine;
 
     [RequireComponent(typeof(CanvasGroup))]
@@ -26,14 +27,16 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
             this.isInitialized = true;
         }
 
-        public virtual void Show()
+        public virtual UniTask Show(bool animate = true)
         {
             this.gameObject.SetActive(true);
+            return UniTask.CompletedTask;
         }
 
-        public virtual void Hide()
+        public virtual UniTask Hide(bool animate = true)
         {
             this.gameObject.SetActive(false);
+            return UniTask.CompletedTask;
         }
 
         public GameObject GetGameObject()

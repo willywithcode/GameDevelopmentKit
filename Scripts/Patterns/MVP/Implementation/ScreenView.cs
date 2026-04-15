@@ -23,8 +23,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public override PresenterType Type => PresenterType.Screen;
     }
 
-    public class ScreenPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : ScreenView
+    public class ScreenPresenter<TView, TModel> : ScreenPresenter<TView>, IPresenter<TModel>
+        where TView : ScreenView
     {
+        protected TModel model;
+
         public ScreenPresenter(
             IViewFactory                  viewFactory,
             UICanvas                      uiCanvas,
@@ -33,6 +36,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             IPublisher<OnButtonClickSignal> buttonClickPublisher
         ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
 
-        public override PresenterType Type => PresenterType.Screen;
+        public void SetModel(TModel model) => this.model = model;
     }
 }

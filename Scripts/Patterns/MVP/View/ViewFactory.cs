@@ -2,6 +2,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
 {
     using System;
     using System.Collections.Generic;
+    using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Extenstions;
     using GameFoundation.Scripts.Patterns.MVP.Attribute;
@@ -14,9 +15,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
 
     public interface IViewFactory
     {
-        T    CreateView<T>(IPresenter typePresenter) where T : BaseView;
-        T    CreateView<T>(Transform parent) where T : BaseView;
-        void ReturnToPool<T>(T       view) where T : BaseView;
+        UniTask<T> CreateViewAsync<T>(IPresenter typePresenter) where T : BaseView;
+        UniTask<T> CreateViewAsync<T>(Transform  parent) where T : BaseView;
+        void       ReturnToPool<T>(T             view) where T : BaseView;
     }
 
     public class ViewFactory : IViewFactory
@@ -24,8 +25,9 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
         private readonly IAssetsManager                   assetsManager;
         private readonly IObjectResolver                  resolver;
         private readonly UICanvas                         uiCanvas;
-        private readonly Dictionary<Type, string>         viewPathCache = new();
-        private readonly Dictionary<Type, List<BaseView>> viewPool      = new();
+        private readonly Dictionary<Type, string>         viewPathCache    = new();
+        private readonly Dictionary<Type, int>            viewMaxPoolCache = new();
+        private readonly Dictionary<Type, List<BaseView>> viewPool         = new();
 
         [Inject]
         public ViewFactory(IAssetsManager assetsManager, IObjectResolver resolver, UICanvas uiCanvas)
@@ -35,29 +37,20 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
             this.uiCanvas      = uiCanvas;
         }
 
-        public TView CreateView<TView>(IPresenter presenter) where TView : BaseView
+        public UniTask<TView> CreateViewAsync<TView>(IPresenter presenter) where TView : BaseView
         {
-            var parentTransform = this.uiCanvas.transform;
-            if (presenter.Type == PresenterType.Overlay)
+            var parentTransform = presenter.Type switch
             {
-                parentTransform = this.uiCanvas.OverlayTransform;
-            }
-            else if (presenter.Type == PresenterType.Popup)
-            {
-                parentTransform = this.uiCanvas.PopupTransform;
-            }
-            else if (presenter.Type == PresenterType.Screen)
-            {
-                parentTransform = this.uiCanvas.ScreenTransform;
-            }
-            else if (presenter.Type == PresenterType.Splash)
-            {
-                parentTransform = this.uiCanvas.SplashTransform;
-            }
-            return this.CreateView<TView>(parentTransform);
+                PresenterType.Overlay => this.uiCanvas.OverlayTransform,
+                PresenterType.Popup   => this.uiCanvas.PopupTransform,
+                PresenterType.Screen  => this.uiCanvas.ScreenTransform,
+                PresenterType.Splash  => this.uiCanvas.SplashTransform,
+                _                     => this.uiCanvas.transform,
+            };
+            return this.CreateViewAsync<TView>(parentTransform);
         }
 
-        public T CreateView<T>(Transform parent) where T : BaseView
+        public async UniTask<T> CreateViewAsync<T>(Transform parent) where T : BaseView
         {
             var viewType = typeof(T);
             if (this.viewPool.TryGetValue(viewType, out var pooledViews) && pooledViews.Count > 0)
@@ -75,10 +68,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
                 var attribute = Attribute.GetCustomAttribute(viewType, typeof(ViewAttribute)) as ViewAttribute;
                 if (attribute == null) throw new($"View {viewType.Name} does not have a ViewAttribute");
 
-                prefabPath                   = attribute.PrefabPath;
-                this.viewPathCache[viewType] = prefabPath;
+                prefabPath                      = attribute.PrefabPath;
+                this.viewPathCache[viewType]    = prefabPath;
+                this.viewMaxPoolCache[viewType] = attribute.MaxPoolSize;
             }
-            var prefab = this.assetsManager.LoadAsset<GameObject>(prefabPath);
+            var prefab = await this.assetsManager.LoadAssetAsync<GameObject>(prefabPath);
             if (prefab == null) throw new($"Failed to load prefab for view {viewType.Name} at path {prefabPath}");
             var instance = Object.Instantiate(prefab, parent);
             var view     = instance.GetComponent<T>();
@@ -99,7 +93,19 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
                 this.viewPool[viewType] = pooledViews;
             }
 
-            view.Hide();
+            view.Hide(false).Forget();
+
+            var maxPoolSize = this.viewMaxPoolCache.TryGetValue(viewType, out var cached) ? cached : 5;
+            if (pooledViews.Count >= maxPoolSize)
+            {
+                Object.Destroy(view.gameObject);
+                if (this.viewPathCache.TryGetValue(viewType, out var prefabPath))
+                {
+                    this.assetsManager.Release(prefabPath);
+                }
+                return;
+            }
+
             view.transform.SetParent(null);
             pooledViews.Add(view);
         }

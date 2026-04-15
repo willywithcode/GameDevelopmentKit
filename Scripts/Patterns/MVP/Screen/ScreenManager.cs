@@ -2,13 +2,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
 {
     using System;
     using System.Collections.Generic;
-    using GameFoundation.Scripts.Extenstions;
-    using GameFoundation.Scripts.Patterns.MVP.Implementation;
+    using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.View;
     using UnityEngine;
     using VContainer;
-    using ZLinq;
 
     public class ScreenManager : IScreenManager
     {
@@ -29,42 +27,69 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
 
         #endregion
 
-        public void ShowScreen<T>() where T : IPresenter
+        public void ShowScreen<T>() where T : IPresenter => this.ShowScreen<T>(true);
+
+        public void ShowScreen<T>(bool animate) where T : IPresenter
         {
-            var presenterType = typeof(T);
-            if (!this.presenters.TryGetValue(presenterType, out var presenter))
-            {
-                presenter = this.resolver.Resolve(presenterType) as IPresenter;
-                if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-                this.presenters[presenterType] = presenter;
-            }
-            presenter.Open();
+            this.ResolveOrGet<T>().Open(animate);
         }
 
-        public void ShowScreen<T, TModel>(TModel model) where T : IPresenter
+        public void ShowScreen<T, TModel>(TModel model) where T : IPresenter => this.ShowScreen<T, TModel>(model, true);
+
+        public void ShowScreen<T, TModel>(TModel model, bool animate) where T : IPresenter
         {
-            var presenterType = typeof(T);
-            if (!this.presenters.TryGetValue(presenterType, out var presenter))
-            {
-                presenter = this.resolver.Resolve(presenterType) as IPresenter;
-
-                if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
-                this.presenters[presenterType] = presenter;
-            }
-
+            var presenter = this.ResolveOrGet<T>();
             if (presenter is IPresenter<TModel> presenterWithModel)
                 presenterWithModel.SetModel(model);
-            presenter.Open();
+            presenter.Open(animate);
         }
 
-        public void HideScreen<T>() where T : IPresenter
+        public UniTask ShowScreenAsync<T>(bool animate = true) where T : IPresenter
+        {
+            return this.ResolveOrGet<T>().OpenAsync(animate);
+        }
+
+        public UniTask ShowScreenAsync<T, TModel>(TModel model, bool animate = true) where T : IPresenter
+        {
+            var presenter = this.ResolveOrGet<T>();
+            if (presenter is IPresenter<TModel> presenterWithModel)
+                presenterWithModel.SetModel(model);
+            return presenter.OpenAsync(animate);
+        }
+
+        public void HideScreen<T>() where T : IPresenter => this.HideScreen<T>(true);
+
+        public void HideScreen<T>(bool animate) where T : IPresenter
         {
             var presenterType = typeof(T);
 
             if (this.presenters.TryGetValue(presenterType, out var presenter))
-                presenter.Close();
+                presenter.Close(animate);
             else
                 Debug.LogWarning($"Attempting to hide screen {presenterType.Name} that was not shown.");
+        }
+
+        public UniTask HideScreenAsync<T>(bool animate = true) where T : IPresenter
+        {
+            var presenterType = typeof(T);
+
+            if (this.presenters.TryGetValue(presenterType, out var presenter))
+                return presenter.CloseAsync(animate);
+
+            Debug.LogWarning($"Attempting to hide screen {presenterType.Name} that was not shown.");
+            return UniTask.CompletedTask;
+        }
+
+        private IPresenter ResolveOrGet<T>() where T : IPresenter
+        {
+            var presenterType = typeof(T);
+            if (!this.presenters.TryGetValue(presenterType, out var presenter))
+            {
+                presenter = this.resolver.Resolve(presenterType) as IPresenter;
+                if (presenter == null) throw new($"Could not resolve presenter of type {presenterType.Name}");
+                this.presenters[presenterType] = presenter;
+            }
+            return presenter;
         }
 
         public void HideAllScreens()
@@ -104,31 +129,21 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
 
         public IEnumerable<IPresenter> GetAllScreens(bool onlyOpened = false)
         {
-            return onlyOpened ? this.presenters.Values.AsValueEnumerable().Where(p => (p as BasePresenter<BaseView>)?.IsOpen ?? false).ToList() : this.presenters.Values;
+            foreach (var presenter in this.presenters.Values)
+            {
+                if (!onlyOpened || presenter.IsOpen)
+                    yield return presenter;
+            }
         }
 
         public IEnumerable<IPresenter> GetAllScreens(PresenterType type, bool onlyOpened = false)
         {
-            var result = new List<IPresenter>();
             foreach (var presenter in this.presenters.Values)
             {
-                var presenterType = presenter.GetType();
-                var isOfType = type switch
-                {
-                    PresenterType.Screen => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ScreenPresenter<>)),
-                    PresenterType.Popup => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(PopupPresenter<>)),
-                    PresenterType.Overlay => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(OverlayPresenter<>)),
-                    PresenterType.Splash => presenterType.GetBaseTypes()
-                        .AsValueEnumerable().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SplashPresenter<>)),
-                    _ => false
-                };
-                if (isOfType && (!onlyOpened || (presenter as BasePresenter<BaseView>)?.IsOpen == true))
-                    result.Add(presenter);
+                if (presenter.Type != type) continue;
+                if (onlyOpened && !presenter.IsOpen) continue;
+                yield return presenter;
             }
-            return result;
         }
 
         public void DestroyScreen<T>() where T : IPresenter

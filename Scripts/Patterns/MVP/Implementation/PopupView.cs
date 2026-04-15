@@ -53,10 +53,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             this.gameObject.SetActive(false);
         }
 
-        public virtual void Show(bool animate)
+        public override async UniTask Show(bool animate = true)
         {
             this.KillActiveSequence();
-            base.Show();
+            this.gameObject.SetActive(true);
 
             if (!animate)
             {
@@ -65,6 +65,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             }
 
             this.ResetHiddenState();
+            this.SetInteraction(false);
 
             this.activeSequence = DOTween.Sequence();
             this.activeSequence.Join(this.ContentTransform.DOScale(Vector3.one * this.targetScale, this.showDuration)
@@ -78,15 +79,12 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                     .SetUpdate(UpdateType.Normal, true));
             }
 
-            // this.SetInteraction(false);
-            this.activeSequence.OnComplete(() =>
-            {
-                // this.SetInteraction(true);
-                this.activeSequence = null;
-            });
+            await this.activeSequence.AsyncWaitForCompletion();
+            this.SetInteraction(true);
+            this.activeSequence = null;
         }
 
-        public virtual void Hide(bool animate)
+        public override async UniTask Hide(bool animate = true)
         {
             this.KillActiveSequence();
 
@@ -97,13 +95,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
             if (!animate)
             {
-                // this.SetInteraction(false);
-                base.Hide();
+                this.SetInteraction(false);
+                this.gameObject.SetActive(false);
                 this.ResetHiddenState();
                 return;
             }
 
-            // this.SetInteraction(false);
+            this.SetInteraction(false);
 
             this.activeSequence = DOTween.Sequence();
             this.activeSequence.Join(this.ContentTransform.DOScale(Vector3.zero, this.hideDuration)
@@ -116,12 +114,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                 this.activeSequence.Join(this.dimmer.DOFade(0f, this.hideDuration).SetUpdate(UpdateType.Normal, true));
             }
 
-            this.activeSequence.OnComplete(() =>
-            {
-                base.Hide();
-                this.ResetHiddenState();
-                this.activeSequence = null;
-            });
+            await this.activeSequence.AsyncWaitForCompletion();
+            this.gameObject.SetActive(false);
+            this.ResetHiddenState();
+            this.activeSequence = null;
         }
 
         private void ResetHiddenState()
@@ -171,7 +167,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             this.KillActiveSequence();
             this.ResetHiddenState();
-            // this.SetInteraction(false);
+            this.SetInteraction(false);
         }
     }
 
@@ -179,26 +175,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     {
         public override PresenterType Type => PresenterType.Popup;
 
-        protected override UniTask OnBeforeShow()
-        {
-            this.OnShowWithAnim(true);
-            return base.OnBeforeShow();
-        }
-
-        protected virtual void OnShowWithAnim(bool haveAnimation)
-        {
-            if (this.view == null) return;
-            this.view.Show(haveAnimation);
-            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
-        }
-
-        protected virtual void OnHideWithAnim(bool haveAnimation)
-        {
-            if (this.view == null) return;
-            this.view.Hide(haveAnimation);
-            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
-        }
-
         public PopupPresenter(
             IViewFactory                  viewFactory,
             UICanvas                      uiCanvas,
@@ -208,29 +184,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
     }
 
-    public class PopupPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : PopupView
+    public class PopupPresenter<TView, TModel> : PopupPresenter<TView>, IPresenter<TModel>
+        where TView : PopupView
     {
-        public override PresenterType Type => PresenterType.Popup;
-
-        protected override UniTask OnBeforeShow()
-        {
-            this.OnShowWithAnim(true);
-            return base.OnBeforeShow();
-        }
-
-        protected virtual void OnShowWithAnim(bool haveAnimation)
-        {
-            if (this.view == null) return;
-            this.view.Show(haveAnimation);
-            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
-        }
-
-        protected virtual void OnHideWithAnim(bool haveAnimation)
-        {
-            if (this.view == null) return;
-            this.view.Hide(haveAnimation);
-            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
-        }
+        protected TModel model;
 
         public PopupPresenter(
             IViewFactory                  viewFactory,
@@ -239,5 +196,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             IPublisher<HidePresenterSignal> hidePresenterPublisher,
             IPublisher<OnButtonClickSignal> buttonClickPublisher
         ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
+
+        public void SetModel(TModel model) => this.model = model;
     }
 }

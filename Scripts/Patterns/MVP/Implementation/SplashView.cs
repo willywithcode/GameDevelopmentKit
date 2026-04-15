@@ -60,10 +60,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             // this.SetInteraction(false);
             this.gameObject.SetActive(false);
         }
-        public virtual async UniTask Show(bool animate)
+        public override async UniTask Show(bool animate = true)
         {
             this.KillActiveSequence();
-            base.Show();
+            this.gameObject.SetActive(true);
 
             if (!animate)
             {
@@ -93,7 +93,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             this.activeSequence = null;
         }
 
-        public virtual async UniTask Hide(bool animate)
+        public override async UniTask Hide(bool animate = true)
         {
             this.KillActiveSequence();
 
@@ -106,7 +106,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             {
                 this.CancelLoadingOperation();
                 // this.SetInteraction(false);
-                base.Hide();
+                this.gameObject.SetActive(false);
                 this.ResetHiddenState();
                 this.onSplashHidden?.Invoke();
                 return;
@@ -127,7 +127,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             }
             await this.activeSequence.AsyncWaitForCompletion();
             this.CancelLoadingOperation();
-            base.Hide();
+            this.gameObject.SetActive(false);
             this.ResetHiddenState();
             this.onSplashHidden?.Invoke();
             this.activeSequence = null;
@@ -137,13 +137,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             this.CancelLoadingOperation();
 
-            this.Show(animateIn);
-            Sequence showSequence = animateIn ? this.activeSequence : null;
-
-            if (showSequence != null)
-            {
-                await showSequence.AsyncWaitForCompletion();
-            }
+            await this.Show(animateIn);
 
             if (loadOperation != null)
             {
@@ -160,13 +154,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                 }
             }
 
-            this.Hide(animateOut);
-            Sequence hideSequence = animateOut ? this.activeSequence : null;
-
-            if (hideSequence != null)
-            {
-                await hideSequence.AsyncWaitForCompletion();
-            }
+            await this.Hide(animateOut);
         }
 
         public void CancelLoadingOperation()
@@ -268,8 +256,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public override PresenterType Type => PresenterType.Splash;
     }
 
-    public class SplashPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : SplashView
+    public class SplashPresenter<TView, TModel> : SplashPresenter<TView>, IPresenter<TModel>
+        where TView : SplashView
     {
+        protected TModel model;
+
         public SplashPresenter(
             IViewFactory                  viewFactory,
             UICanvas                      uiCanvas,
@@ -278,30 +269,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             IPublisher<OnButtonClickSignal> buttonClickPublisher
         ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
 
-        protected virtual async UniTask OnShow(bool haveAnimation)
-        {
-            if (this.view == null) return;
-            await this.view.Show(haveAnimation);
-        }
-
-        protected virtual async UniTask OnHide(bool haveAnimation)
-        {
-            if (this.view == null) return;
-            await this.view.Hide(haveAnimation);
-        }
-
-        protected UniTask PlaySplashAsync(Func<CancellationToken, UniTask> loadOperation, bool animateIn = true, bool animateOut = true)
-        {
-            if (this.view == null) return UniTask.CompletedTask;
-            return this.view.PlaySplashAsync(loadOperation, animateIn, animateOut);
-        }
-
-        protected void CancelLoading()
-        {
-            if (this.view == null) return;
-            this.view.CancelLoadingOperation();
-        }
-
-        public override PresenterType Type => PresenterType.Splash;
+        public void SetModel(TModel model) => this.model = model;
     }
 }
