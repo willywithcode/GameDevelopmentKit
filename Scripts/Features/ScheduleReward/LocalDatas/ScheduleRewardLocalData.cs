@@ -1,3 +1,4 @@
+#if SCHEDULE_REWARD
 namespace GameFoundation.Scripts.Features.ScheduleReward.LocalDatas
 {
     using System;
@@ -36,7 +37,7 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.LocalDatas
 
         public void Initialize()
         {
-            if (this.userExperienceService.GetTimePlayed() > 0) return;
+            if (this.userExperienceService.GetSessionCount() > 0) return;
             var defaultData = this.assetsManager.LoadAsset<ScheduleRewardBlueprint>("ScheduleRewardBlueprint");
             foreach (var reward in defaultData.Rewards)
             {
@@ -63,3 +64,4 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.LocalDatas
         }
     }
 }
+#endif

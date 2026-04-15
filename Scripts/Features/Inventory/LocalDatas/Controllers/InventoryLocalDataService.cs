@@ -41,7 +41,7 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
                     this.itemLimits[item.ItemId] = item.Limit;
             }
 
-            if (this.userExperienceService.GetTimePlayed() > 0) return;
+            if (this.userExperienceService.GetSessionCount() > 0) return;
 
             foreach (var item in this.inventoryDefault.InventoryItems)
             {

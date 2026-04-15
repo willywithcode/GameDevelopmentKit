@@ -25,9 +25,9 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
             this.userExperienceLocalDataService.ExitGame();
         }
 
-        public int GetTimePlayed()
+        public int GetSessionCount()
         {
-            return this.userExperienceLocalDataService.GetTimePlayed();
+            return this.userExperienceLocalDataService.GetSessionCount();
         }
 
         public DateTime GetLastLoginDate()
@@ -38,6 +38,16 @@ namespace GameFoundation.Scripts.Features.UserExperience.Services
         public DateTime GetLastLogoutDate()
         {
             return this.userExperienceLocalDataService.Data.lastLogoutDate;
+        }
+
+        public string GetInstallVersion()
+        {
+            return this.userExperienceLocalDataService.GetInstallVersion();
+        }
+
+        public bool IsUpdatedSinceInstall()
+        {
+            return this.userExperienceLocalDataService.IsUpdatedSinceInstall();
         }
     }
 }

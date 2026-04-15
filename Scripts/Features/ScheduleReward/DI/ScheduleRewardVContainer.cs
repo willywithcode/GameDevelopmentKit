@@ -7,7 +7,9 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.DI
     {
         public static void RegisterScheduleReward(this IContainerBuilder builder)
         {
+#if SCHEDULE_REWARD
             builder.Register<ScheduleRewardService>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
+#endif
         }
     }
 }

@@ -1,5 +1,6 @@
 namespace GameFoundation.Scripts.Features.ScheduleReward.Service
 {
+#if SCHEDULE_REWARD
     using System;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.Inventory.Services;
@@ -75,4 +76,5 @@ namespace GameFoundation.Scripts.Features.ScheduleReward.Service
             return this.scheduleRewardBlueprint.Rewards[rewardIndex];
         }
     }
+#endif
 }

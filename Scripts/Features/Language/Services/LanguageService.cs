@@ -265,7 +265,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
 
         public void Initialize()
         {
-            if (this.userExperienceService.GetTimePlayed() <= 0)
+            if (this.userExperienceService.GetSessionCount() <= 0)
             {
                 string desiredLanguage;
 
