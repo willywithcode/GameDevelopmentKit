@@ -4,6 +4,7 @@ namespace GameFoundation.Scripts
     using HGameFoundation.Scripts.Features.DailyReward.DI;
     #endif
     using GameFoundation.Scripts.Addressable;
+    using GameFoundation.Scripts.Blueprints.CSV.DI;
     using GameFoundation.Scripts.Blueprints.ScriptableObject.DI;
     using GameFoundation.Scripts.EntityManager.DI;
     using GameFoundation.Scripts.Features.AntiCheat.DI;
@@ -57,6 +58,7 @@ namespace GameFoundation.Scripts
             #if LEADERBOARD
             builder.RegisterLeaderBoard();
             #endif
+            builder.RegisterCsvBlueprint();
             builder.RegisterSOBlueprint();
             #if DAILY_REWARD
             builder.RegisterDailyReward();
