@@ -79,7 +79,7 @@ profileService.UnlockLevel(3);
 
 ## Signals
 
-The feature publishes through `SignalBus`.
+The feature publishes through `MessagePipe`.
 
 Available signals:
 
@@ -89,22 +89,29 @@ Available signals:
 Example subscription:
 
 ```csharp
+using System;
 using GameFoundation.Scripts.Features.Profile.Signals;
-using GameFoundation.Scripts.Patterns.SignalBus;
+using MessagePipe;
 
-public class ExampleProfileListener
+public class ExampleProfileListener : IDisposable
 {
-    private readonly SignalBus signalBus;
+    private readonly ISubscriber<OnProfileChanged> profileChangedSubscriber;
+    private readonly IDisposable                    subscription;
 
-    public ExampleProfileListener(SignalBus signalBus)
+    public ExampleProfileListener(ISubscriber<OnProfileChanged> profileChangedSubscriber)
     {
-        this.signalBus = signalBus;
-        this.signalBus.Subscribe<OnProfileChanged>(this.OnProfileChanged);
+        this.profileChangedSubscriber = profileChangedSubscriber;
+        this.subscription = this.profileChangedSubscriber.Subscribe(this.OnProfileChanged);
     }
 
     private void OnProfileChanged(OnProfileChanged signal)
     {
         UnityEngine.Debug.Log($"Profile changed: {signal.DisplayName} / avatar {signal.AvatarIndex}");
+    }
+
+    public void Dispose()
+    {
+        this.subscription.Dispose();
     }
 }
 ```

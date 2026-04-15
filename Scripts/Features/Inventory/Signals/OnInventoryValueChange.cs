@@ -1,6 +1,6 @@
 namespace GameFoundation.Scripts.Features.Inventory.Signals
 {
-    public class OnInventoryValueChange
+    public readonly struct OnInventoryValueChange
     {
         public string ItemId       { get; }
         public int    ChangedValue { get; }

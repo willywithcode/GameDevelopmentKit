@@ -20,7 +20,7 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.LocalData.DI;
     using GameFoundation.Scripts.Patterns.MVP.DI;
     using GameFoundation.Scripts.Patterns.ObjectPooling;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using MessagePipe;
     using VContainer;
     #if MULTILANGUAGE
     using GameFoundation.Scripts.Features.Language.DI;
@@ -39,7 +39,7 @@ namespace GameFoundation.Scripts
         {
             builder.Register<AssetsManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.Register<ObjectPoolManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
-            builder.Register<SignalBus>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
+            builder.RegisterMessagePipe();
             builder.RegisterMVP();
             builder.RegisterEntityManager();
             builder.RegisterNewDayReset();

@@ -8,24 +8,24 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
     using GameFoundation.Scripts.Features.Inventory.Signals;
     using GameFoundation.Scripts.Features.UserExperience.Services;
     using GameFoundation.Scripts.LocalData.Service;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using MessagePipe;
     using VContainer.Unity;
 
     public class InventoryLocalDataService : ACTkBaseLocalDataService<InventoryLocalData>, IInitializable
     {
-        private readonly IAssetsManager        assetsManager;
-        private readonly UserExperienceService userExperienceService;
-        private readonly SignalBus             signalBus;
+        private readonly IAssetsManager                    assetsManager;
+        private readonly UserExperienceService             userExperienceService;
+        private readonly IPublisher<OnInventoryValueChange> inventoryValueChangePublisher;
 
         public InventoryLocalDataService(
-            IAssetsManager        assetsManager,
-            SignalBus             signalBus,
-            UserExperienceService userExperienceService
+            IAssetsManager                    assetsManager,
+            IPublisher<OnInventoryValueChange> inventoryValueChangePublisher,
+            UserExperienceService             userExperienceService
         )
         {
-            this.assetsManager         = assetsManager;
-            this.userExperienceService = userExperienceService;
-            this.signalBus             = signalBus;
+            this.assetsManager                 = assetsManager;
+            this.userExperienceService         = userExperienceService;
+            this.inventoryValueChangePublisher = inventoryValueChangePublisher;
         }
 
         private InventoryDefault        inventoryDefault;
@@ -47,7 +47,7 @@ namespace GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers
             {
                 if (this.Data.InventoryItems.ContainsKey(item.ItemId)) continue;
                 this.Data.InventoryItems.Add(item.ItemId, item.Amount);
-                this.signalBus.Fire<OnInventoryValueChange>(new(item.ItemId, item.Amount));
+                this.inventoryValueChangePublisher.Publish(new OnInventoryValueChange(item.ItemId, item.Amount));
                 this.Save();
             }
         }

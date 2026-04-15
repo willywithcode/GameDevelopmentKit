@@ -1,12 +1,12 @@
 namespace GameFoundation.Scripts.Features.Language.Signals
 {
-    public class OnLanguageChange
+    public readonly struct OnLanguageChange
     {
-        private string language;
+        public string Language { get; }
 
         public OnLanguageChange(string language)
         {
-            this.language = language;
+            this.Language = language;
         }
     }
 }

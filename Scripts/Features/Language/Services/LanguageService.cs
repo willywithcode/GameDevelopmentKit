@@ -9,7 +9,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
     using GameFoundation.Scripts.Features.Language.LocalDatas;
     using GameFoundation.Scripts.Features.Language.Signals;
     using GameFoundation.Scripts.Features.UserExperience.Services;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using MessagePipe;
     using Newtonsoft.Json;
     using UnityEngine;
     using VContainer.Unity;
@@ -21,7 +21,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
         #region Inject
 
         private readonly LanguageLocalDataService          languageLocalDataService;
-        private readonly SignalBus                         signalBus;
+        private readonly IPublisher<OnLanguageChange>      languageChangePublisher;
         private readonly UserExperienceService             userExperienceService;
         private readonly LanguageBlueprint                 languageBlueprint;
         private readonly Dictionary<string, LanguageData>  languageDataMap;
@@ -30,14 +30,14 @@ namespace GameFoundation.Scripts.Features.Language.Services
         private readonly Dictionary<string, string>        languageCodeToNameMap;
 
         public LanguageService(
-            LanguageLocalDataService languageLocalDataService,
-            IAssetsManager           assetsManager,
-            SignalBus                signalBus,
-            UserExperienceService    userExperienceService
+            LanguageLocalDataService    languageLocalDataService,
+            IAssetsManager              assetsManager,
+            IPublisher<OnLanguageChange> languageChangePublisher,
+            UserExperienceService       userExperienceService
         )
         {
             this.languageLocalDataService = languageLocalDataService;
-            this.signalBus                = signalBus;
+            this.languageChangePublisher  = languageChangePublisher;
             this.userExperienceService    = userExperienceService;
             this.languageBlueprint        = this.LoadLanguageBlueprint(assetsManager);
             this.languageDataMap          = this.LoadLanguageDatas(assetsManager, this.languageBlueprint);
@@ -303,7 +303,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
         public void SetLanguage(string language)
         {
             this.languageLocalDataService.CurrentLanguage = language;
-            this.signalBus.Fire(new OnLanguageChange(language));
+            this.languageChangePublisher.Publish(new OnLanguageChange(language));
         }
 
         public bool TryGetTranslation(string key, out string translation)

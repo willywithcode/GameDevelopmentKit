@@ -1,9 +1,10 @@
 namespace GameFoundation.Scripts.Features.Language.Components
 {
+    using System;
     using GameFoundation.Scripts.DI;
     using GameFoundation.Scripts.Features.Language.Services;
     using GameFoundation.Scripts.Features.Language.Signals;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using MessagePipe;
     using Sirenix.OdinInspector;
     using TMPro;
     using UnityEngine;
@@ -11,9 +12,10 @@ namespace GameFoundation.Scripts.Features.Language.Components
 
     public class Language_TMP_Text : MonoBehaviour
     {
-        private                  LanguageService languageService;
-        private                  SignalBus       signalBus;
-        [SerializeField] private TMP_Text        textMeshPro;
+        private                  LanguageService                languageService;
+        private                  ISubscriber<OnLanguageChange>  languageChangeSubscriber;
+        private                  IDisposable                    subscription;
+        [SerializeField] private TMP_Text                       textMeshPro;
 
         [OnInspectorGUI]
         private void OnInspectorGUI()
@@ -26,8 +28,9 @@ namespace GameFoundation.Scripts.Features.Language.Components
 
         protected void Awake()
         {
-            this.languageService = this.GetCurrentContainer().Resolve<LanguageService>();
-            this.signalBus       = this.GetCurrentContainer().Resolve<SignalBus>();
+            var container = this.GetCurrentContainer();
+            this.languageService          = container.Resolve<LanguageService>();
+            this.languageChangeSubscriber = container.Resolve<ISubscriber<OnLanguageChange>>();
         }
 
         protected void Start()
@@ -36,7 +39,7 @@ namespace GameFoundation.Scripts.Features.Language.Components
             {
                 this.textMeshPro = this.GetComponent<TMP_Text>();
             }
-            this.signalBus.Subscribe<OnLanguageChange>(this.OnLanguageChange);
+            this.subscription = this.languageChangeSubscriber.Subscribe(this.OnLanguageChange);
             if (this.languageService.TryGetTranslation(this.key, out var translation))
             {
                 this.textMeshPro.text = translation;
@@ -45,7 +48,8 @@ namespace GameFoundation.Scripts.Features.Language.Components
 
         protected void OnDestroy()
         {
-            this.signalBus.Unsubscribe<OnLanguageChange>(this.OnLanguageChange);
+            this.subscription?.Dispose();
+            this.subscription = null;
         }
 
         private void OnLanguageChange(OnLanguageChange signal)
