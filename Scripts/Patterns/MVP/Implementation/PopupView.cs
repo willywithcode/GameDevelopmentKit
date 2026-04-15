@@ -5,7 +5,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using GameFoundation.Scripts.Signals;
+    using MessagePipe;
     using UnityEngine;
     using UnityEngine.UI;
 
@@ -188,18 +189,23 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             if (this.view == null) return;
             this.view.Show(haveAnimation);
-            this.signalBus.Fire(new OpenPresenterSignal(this));
+            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
         }
 
         protected virtual void OnHideWithAnim(bool haveAnimation)
         {
             if (this.view == null) return;
             this.view.Hide(haveAnimation);
-            this.signalBus.Fire(new HidePresenterSignal(this));
+            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
         }
 
-        public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory,
-            signalBus, uiCanvas) { }
+        public PopupPresenter(
+            IViewFactory                  viewFactory,
+            UICanvas                      uiCanvas,
+            IPublisher<OpenPresenterSignal> openPresenterPublisher,
+            IPublisher<HidePresenterSignal> hidePresenterPublisher,
+            IPublisher<OnButtonClickSignal> buttonClickPublisher
+        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
     }
 
     public class PopupPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : PopupView
@@ -216,16 +222,22 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             if (this.view == null) return;
             this.view.Show(haveAnimation);
-            this.signalBus.Fire(new OpenPresenterSignal(this));
+            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
         }
 
         protected virtual void OnHideWithAnim(bool haveAnimation)
         {
             if (this.view == null) return;
             this.view.Hide(haveAnimation);
-            this.signalBus.Fire(new HidePresenterSignal(this));
+            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
         }
 
-        public PopupPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
+        public PopupPresenter(
+            IViewFactory                  viewFactory,
+            UICanvas                      uiCanvas,
+            IPublisher<OpenPresenterSignal> openPresenterPublisher,
+            IPublisher<HidePresenterSignal> hidePresenterPublisher,
+            IPublisher<OnButtonClickSignal> buttonClickPublisher
+        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
     }
 }

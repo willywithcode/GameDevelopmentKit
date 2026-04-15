@@ -1,6 +1,6 @@
 namespace GameFoundation.Scripts.Features.Profile.Signals
 {
-    public class OnProfileCreated
+    public readonly struct OnProfileCreated
     {
         public string PlayerId             { get; }
         public string DisplayName          { get; }
@@ -27,7 +27,7 @@ namespace GameFoundation.Scripts.Features.Profile.Signals
         }
     }
 
-    public class OnProfileChanged
+    public readonly struct OnProfileChanged
     {
         public string PlayerId             { get; }
         public string DisplayName          { get; }

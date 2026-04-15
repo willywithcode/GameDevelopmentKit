@@ -9,7 +9,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
     using GameFoundation.Scripts.Features.LiveFeature.Blueprints;
     using GameFoundation.Scripts.Features.LiveFeature.LocalData;
     using GameFoundation.Scripts.Features.LiveFeature.Signals;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using MessagePipe;
     using UnityEngine;
     using VContainer.Unity;
 
@@ -17,28 +17,31 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
     {
         private const string LIVE_ITEM_ID = "live";
 
-        private readonly LiveBlueprint        liveBlueprint;
-        private readonly LiveLocalDataService localData;
-        private readonly IInventoryService    inventoryService;
-        private readonly SignalBus            signalBus;
-        private readonly IAssetsManager       assetsManager;
+        private readonly LiveBlueprint                liveBlueprint;
+        private readonly LiveLocalDataService         localData;
+        private readonly IInventoryService            inventoryService;
+        private readonly IPublisher<OnLivesChanged>   livesChangedPublisher;
+        private readonly IPublisher<OnLivesTimerTick> livesTimerTickPublisher;
+        private readonly IAssetsManager               assetsManager;
         private CancellationTokenSource tickCts;
         private TimeSpan                livesRefillTime;
         private TimeSpan                infinityTime;
         private bool                    isInit;
 
         public LiveService(
-            IAssetsManager       assetsManager, 
-            LiveLocalDataService localData,
-            IInventoryService    inventoryService,
-            SignalBus            signalBus
+            IAssetsManager               assetsManager,
+            LiveLocalDataService         localData,
+            IInventoryService            inventoryService,
+            IPublisher<OnLivesChanged>   livesChangedPublisher,
+            IPublisher<OnLivesTimerTick> livesTimerTickPublisher
         )
         {
-            this.localData        = localData;
-            this.inventoryService = inventoryService;
-            this.signalBus        = signalBus;
-            this.assetsManager    = assetsManager;
-            this.liveBlueprint    = this.assetsManager.LoadAsset<LiveBlueprint>("LiveBlueprint");
+            this.localData               = localData;
+            this.inventoryService        = inventoryService;
+            this.livesChangedPublisher   = livesChangedPublisher;
+            this.livesTimerTickPublisher = livesTimerTickPublisher;
+            this.assetsManager           = assetsManager;
+            this.liveBlueprint           = this.assetsManager.LoadAsset<LiveBlueprint>("LiveBlueprint");
         }
 
         public void Initialize()
@@ -319,22 +322,20 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
         private void FireLivesChanged()
         {
-            this.signalBus.Fire(new OnLivesChanged
-            {
-                CurrentLives = this.GetLives(),
-                MaxLives     = this.GetMaxLives(),
-                IsInfinity   = this.IsInfinityActive(),
-            });
+            this.livesChangedPublisher.Publish(new OnLivesChanged(
+                this.GetLives(),
+                this.GetMaxLives(),
+                this.IsInfinityActive()
+            ));
         }
 
         private void FireTimerTick()
         {
-            this.signalBus.Fire(new OnLivesTimerTick
-            {
-                SecondsUntilNextLife = this.GetSecondsUntilNextLife(),
-                IsInfinityActive    = this.IsInfinityActive(),
-                InfinitySecondsLeft = this.GetInfinitySecondsLeft(),
-            });
+            this.livesTimerTickPublisher.Publish(new OnLivesTimerTick(
+                this.GetSecondsUntilNextLife(),
+                this.IsInfinityActive(),
+                this.GetInfinitySecondsLeft()
+            ));
         }
     }
 }

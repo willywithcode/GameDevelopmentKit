@@ -3,27 +3,33 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
-    using GameFoundation.Scripts.Patterns.SignalBus;
     using GameFoundation.Scripts.Signals;
+    using MessagePipe;
     using UnityEngine.UI;
 
     public abstract class BasePresenter<TView> : IPresenter where TView : BaseView
     {
         #region Inject
 
-        protected readonly IViewFactory viewFactory;
-        protected readonly SignalBus    signalBus;
-        protected readonly UICanvas     uiCanvas;
+        protected readonly IViewFactory                  viewFactory;
+        protected readonly UICanvas                      uiCanvas;
+        protected readonly IPublisher<OpenPresenterSignal> openPresenterPublisher;
+        protected readonly IPublisher<HidePresenterSignal> hidePresenterPublisher;
+        protected readonly IPublisher<OnButtonClickSignal> buttonClickPublisher;
 
         protected BasePresenter(
-            IViewFactory viewFactory,
-            SignalBus    signalBus,
-            UICanvas     uiCanvas
+            IViewFactory                  viewFactory,
+            UICanvas                      uiCanvas,
+            IPublisher<OpenPresenterSignal> openPresenterPublisher,
+            IPublisher<HidePresenterSignal> hidePresenterPublisher,
+            IPublisher<OnButtonClickSignal> buttonClickPublisher
         )
         {
-            this.viewFactory = viewFactory;
-            this.signalBus   = signalBus;
-            this.uiCanvas    = uiCanvas;
+            this.viewFactory            = viewFactory;
+            this.uiCanvas               = uiCanvas;
+            this.openPresenterPublisher = openPresenterPublisher;
+            this.hidePresenterPublisher = hidePresenterPublisher;
+            this.buttonClickPublisher   = buttonClickPublisher;
         }
 
         #endregion
@@ -41,7 +47,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             }
             this.Bind();
             this.view.transform.SetAsLastSibling();
-            this.signalBus.Fire(new OpenPresenterSignal(this));
+            this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
             this.OnBeforeShow().Forget();
             this.view.Show();
             this.OnAfterShow().Forget();
@@ -49,7 +55,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         public virtual void Close()
         {
-            this.signalBus.Fire(new HidePresenterSignal(this));
+            this.hidePresenterPublisher.Publish(new HidePresenterSignal(this));
             this.OnBeforeHide().Forget();
             this.view.Hide();
             this.OnAfterHide().Forget();
@@ -82,7 +88,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
             {
                 button.onClick.AddListener(() =>
                 {
-                    this.signalBus.Fire<OnButtonClickSignal>(new());
+                    this.buttonClickPublisher.Publish(new OnButtonClickSignal());
                 });
             }
         }
@@ -102,9 +108,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     {
         protected TModel model;
 
-        protected BasePresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas)
-        {
-        }
+        protected BasePresenter(
+            IViewFactory                  viewFactory,
+            UICanvas                      uiCanvas,
+            IPublisher<OpenPresenterSignal> openPresenterPublisher,
+            IPublisher<HidePresenterSignal> hidePresenterPublisher,
+            IPublisher<OnButtonClickSignal> buttonClickPublisher
+        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
 
         public void SetModel(TModel model)
         {

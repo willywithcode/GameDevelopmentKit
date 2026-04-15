@@ -2,32 +2,34 @@ namespace GameFoundation.Scripts.Features.AudioSystem.SubServices
 {
     using System;
     using GameFoundation.Scripts.Features.AudioSystem.Services;
-    using GameFoundation.Scripts.Patterns.SignalBus;
     using GameFoundation.Scripts.Signals;
+    using MessagePipe;
     using VContainer.Unity;
 
     public class CommonButtonClickSound : IInitializable, IDisposable
     {
-        private readonly SignalBus            signalBus;
-        private readonly IAudioManagerService audioManagerService;
+        private readonly ISubscriber<OnButtonClickSignal> buttonClickSubscriber;
+        private readonly IAudioManagerService             audioManagerService;
+        private IDisposable subscription;
 
         public CommonButtonClickSound(
-            SignalBus            signalBus,
-            IAudioManagerService audioManagerService
+            ISubscriber<OnButtonClickSignal> buttonClickSubscriber,
+            IAudioManagerService             audioManagerService
         )
         {
-            this.signalBus           = signalBus;
-            this.audioManagerService = audioManagerService;
+            this.buttonClickSubscriber = buttonClickSubscriber;
+            this.audioManagerService   = audioManagerService;
         }
 
         public void Initialize()
         {
-            this.signalBus.Subscribe<OnButtonClickSignal>(this.OnButtonClick);
+            this.subscription = this.buttonClickSubscriber.Subscribe(this.OnButtonClick);
         }
 
         public void Dispose()
         {
-            this.signalBus.Unsubscribe<OnButtonClickSignal>(this.OnButtonClick);
+            this.subscription?.Dispose();
+            this.subscription = null;
         }
 
         private void OnButtonClick(OnButtonClickSignal obj)

@@ -5,8 +5,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     using Cysharp.Threading.Tasks;
     using DG.Tweening;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
+    using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using GameFoundation.Scripts.Signals;
+    using MessagePipe;
     using UnityEngine;
     using UnityEngine.Events;
     using UnityEngine.UI;
@@ -231,7 +233,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
     public class SplashPresenter<T> : BasePresenter<T> where T : SplashView
     {
-        public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
+        public SplashPresenter(
+            IViewFactory                  viewFactory,
+            UICanvas                      uiCanvas,
+            IPublisher<OpenPresenterSignal> openPresenterPublisher,
+            IPublisher<HidePresenterSignal> hidePresenterPublisher,
+            IPublisher<OnButtonClickSignal> buttonClickPublisher
+        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
 
         protected virtual async UniTask OnShow(bool haveAnimation)
         {
@@ -262,7 +270,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
     public class SplashPresenter<TView, TModel> : BasePresenter<TView, TModel> where TView : SplashView
     {
-        public SplashPresenter(IViewFactory viewFactory, SignalBus signalBus, UICanvas uiCanvas) : base(viewFactory, signalBus, uiCanvas) { }
+        public SplashPresenter(
+            IViewFactory                  viewFactory,
+            UICanvas                      uiCanvas,
+            IPublisher<OpenPresenterSignal> openPresenterPublisher,
+            IPublisher<HidePresenterSignal> hidePresenterPublisher,
+            IPublisher<OnButtonClickSignal> buttonClickPublisher
+        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
 
         protected virtual async UniTask OnShow(bool haveAnimation)
         {

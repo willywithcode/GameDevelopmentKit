@@ -2,22 +2,22 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
 {
     using GameFoundation.Scripts.Features.Inventory.LocalDatas.Controllers;
     using GameFoundation.Scripts.Features.Inventory.Signals;
-    using GameFoundation.Scripts.Patterns.SignalBus;
+    using MessagePipe;
 
     public class InventoryService : IInventoryService
     {
         #region Inject
 
-        private readonly InventoryLocalDataService inventoryLocalDataService;
-        private readonly SignalBus                 signalBus;
+        private readonly InventoryLocalDataService         inventoryLocalDataService;
+        private readonly IPublisher<OnInventoryValueChange> inventoryValueChangePublisher;
 
         public InventoryService(
-            InventoryLocalDataService inventoryLocalDataService,
-            SignalBus                 signalBus
+            InventoryLocalDataService         inventoryLocalDataService,
+            IPublisher<OnInventoryValueChange> inventoryValueChangePublisher
         )
         {
-            this.inventoryLocalDataService = inventoryLocalDataService;
-            this.signalBus                 = signalBus;
+            this.inventoryLocalDataService     = inventoryLocalDataService;
+            this.inventoryValueChangePublisher = inventoryValueChangePublisher;
         }
 
         #endregion
@@ -31,7 +31,7 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
 
             var actualAdded = this.inventoryLocalDataService.AddItem(itemId, amount);
             if (actualAdded > 0)
-                this.signalBus.Fire<OnInventoryValueChange>(new(itemId, actualAdded));
+                this.inventoryValueChangePublisher.Publish(new OnInventoryValueChange(itemId, actualAdded));
         }
 
         public void PayItem(string itemId, int amount)
@@ -42,7 +42,7 @@ namespace GameFoundation.Scripts.Features.Inventory.Services
             }
 
             this.inventoryLocalDataService.PayItem(itemId, amount);
-            this.signalBus.Fire<OnInventoryValueChange>(new(itemId, -amount));
+            this.inventoryValueChangePublisher.Publish(new OnInventoryValueChange(itemId, -amount));
         }
 
         public int GetItemAmount(string itemId) => this.inventoryLocalDataService.GetItemAmount(itemId);

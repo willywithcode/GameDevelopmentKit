@@ -113,7 +113,7 @@ leaderBoardService.Dispose();
 
 ## Signals
 
-The feature publishes through `SignalBus`.
+The feature publishes through `MessagePipe`.
 
 Available signals:
 
@@ -122,22 +122,29 @@ Available signals:
 Example subscription:
 
 ```csharp
+using System;
 using GameFoundation.Scripts.Features.LeaderBoard.Signals;
-using GameFoundation.Scripts.Patterns.SignalBus;
+using MessagePipe;
 
-public class ExampleLeaderBoardListener
+public class ExampleLeaderBoardListener : IDisposable
 {
-    private readonly SignalBus signalBus;
+    private readonly ISubscriber<OnLeaderBoardUpdated> leaderBoardUpdatedSubscriber;
+    private readonly IDisposable                        subscription;
 
-    public ExampleLeaderBoardListener(SignalBus signalBus)
+    public ExampleLeaderBoardListener(ISubscriber<OnLeaderBoardUpdated> leaderBoardUpdatedSubscriber)
     {
-        this.signalBus = signalBus;
-        this.signalBus.Subscribe<OnLeaderBoardUpdated>(this.OnLeaderBoardUpdated);
+        this.leaderBoardUpdatedSubscriber = leaderBoardUpdatedSubscriber;
+        this.subscription = this.leaderBoardUpdatedSubscriber.Subscribe(this.OnLeaderBoardUpdated);
     }
 
     private void OnLeaderBoardUpdated(OnLeaderBoardUpdated signal)
     {
         UnityEngine.Debug.Log($"Leaderboard updated: {signal.Entries.Count} entries");
+    }
+
+    public void Dispose()
+    {
+        this.subscription.Dispose();
     }
 }
 ```
