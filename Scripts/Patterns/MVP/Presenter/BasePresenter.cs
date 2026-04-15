@@ -6,7 +6,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
     using GameFoundation.Scripts.Patterns.MVP.View;
     using GameFoundation.Scripts.Signals;
     using MessagePipe;
-    using UnityEngine.UI;
 
     public abstract class BasePresenter<TView> : IPresenter where TView : BaseView
     {
@@ -68,7 +67,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
                 this.Ready();
             }
 
-            this.RebindButtonClickEffect();
             this.Bind();
             this.view.transform.SetAsLastSibling();
             this.openPresenterPublisher.Publish(new OpenPresenterSignal(this));
@@ -125,19 +123,6 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
         protected virtual UniTask OnAfterShow()  => UniTask.CompletedTask;
         protected virtual UniTask OnBeforeHide() => UniTask.CompletedTask;
         protected virtual UniTask OnAfterHide()  => UniTask.CompletedTask;
-
-        private void RebindButtonClickEffect()
-        {
-            var buttons = this.view.GetComponentsInChildren<Button>(true);
-            foreach (var button in buttons)
-            {
-                button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(() =>
-                {
-                    this.buttonClickPublisher.Publish(new OnButtonClickSignal());
-                });
-            }
-        }
 
         public void DestroyView()
         {
