@@ -63,6 +63,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
             inactiveObjs = this.pools[key].elements.AsValueEnumerable().Where(obj => !obj.tf.gameObject.activeSelf);
             var obj = inactiveObjs.First();
             obj.tf.gameObject.SetActive(true);
+            obj.OnSpawn();
 
             return obj as T;
         }
