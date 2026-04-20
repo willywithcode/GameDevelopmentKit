@@ -11,6 +11,7 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
     using GameFoundation.Scripts.Features.Inventory.DI;
+    using GameFoundation.Scripts.Features.Logger.DI;
     #if LEADERBOARD
     using GameFoundation.Scripts.Features.LeaderBoard.DI;
     #endif
@@ -43,6 +44,7 @@ namespace GameFoundation.Scripts
             builder.Register<AssetsManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.Register<ObjectPoolManager>(Lifetime.Singleton).AsSelf().AsImplementedInterfaces();
             builder.RegisterMessagePipe();
+            builder.RegisterLogger();
             builder.RegisterMVP();
             builder.RegisterEntityManager();
             builder.RegisterNewDayReset();
