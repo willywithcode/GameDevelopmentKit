@@ -84,6 +84,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Presenter
 
         public virtual async UniTask CloseAsync(bool animate = true)
         {
+            if (this.view == null) return;
+
             this.CancelLifetime();
             this.lifetimeCts = new CancellationTokenSource();
             var ct = this.lifetimeCts.Token;
