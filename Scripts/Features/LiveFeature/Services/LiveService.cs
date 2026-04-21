@@ -9,6 +9,8 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
     using GameFoundation.Scripts.Features.LiveFeature.Blueprints;
     using GameFoundation.Scripts.Features.LiveFeature.LocalData;
     using GameFoundation.Scripts.Features.LiveFeature.Signals;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using MessagePipe;
     using UnityEngine;
     using VContainer.Unity;
@@ -23,6 +25,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
         private readonly IPublisher<OnLivesChanged>   livesChangedPublisher;
         private readonly IPublisher<OnLivesTimerTick> livesTimerTickPublisher;
         private readonly IAssetsManager               assetsManager;
+        private readonly IGameLogger                  logger;
         private CancellationTokenSource tickCts;
         private TimeSpan                livesRefillTime;
         private TimeSpan                infinityTime;
@@ -33,7 +36,8 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
             LiveLocalDataService         localData,
             IInventoryService            inventoryService,
             IPublisher<OnLivesChanged>   livesChangedPublisher,
-            IPublisher<OnLivesTimerTick> livesTimerTickPublisher
+            IPublisher<OnLivesTimerTick> livesTimerTickPublisher,
+            IGameLogger                  logger = null
         )
         {
             this.localData               = localData;
@@ -41,6 +45,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
             this.livesChangedPublisher   = livesChangedPublisher;
             this.livesTimerTickPublisher = livesTimerTickPublisher;
             this.assetsManager           = assetsManager;
+            this.logger                  = logger ?? new LoggerService();
             this.liveBlueprint           = this.assetsManager.LoadAsset<LiveBlueprint>("LiveBlueprint");
         }
 
@@ -195,7 +200,7 @@ namespace GameFoundation.Scripts.Features.LiveFeature.Services
 
             if (DateTime.UtcNow < startTime)
             {
-                Debug.Log("[LiveService] Clock rewind detected");
+                this.logger.Info("[LiveService] Clock rewind detected");
                 var timeDifference = startTime - DateTime.UtcNow;
                 this.localData.InfinityStartTimeStamp =
                     DateTime.UtcNow.ToString(CultureInfo.InvariantCulture);

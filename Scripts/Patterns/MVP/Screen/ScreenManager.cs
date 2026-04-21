@@ -3,9 +3,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
     using System;
     using System.Collections.Generic;
     using Cysharp.Threading.Tasks;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.View;
-    using UnityEngine;
     using VContainer;
 
     public class ScreenManager : IScreenManager
@@ -15,14 +16,16 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
         private readonly IViewFactory                 viewFactory;
         private readonly IObjectResolver              resolver;
         private readonly UICanvas                     uiCanvas;
+        private readonly IGameLogger                  logger;
         private readonly Dictionary<Type, IPresenter> presenters = new();
 
         [Inject]
-        public ScreenManager(IViewFactory viewFactory, IObjectResolver resolver, UICanvas uiCanvas)
+        public ScreenManager(IViewFactory viewFactory, IObjectResolver resolver, UICanvas uiCanvas, IGameLogger logger = null)
         {
             this.viewFactory = viewFactory;
             this.resolver    = resolver;
             this.uiCanvas    = uiCanvas;
+            this.logger      = logger ?? new LoggerService();
         }
 
         #endregion
@@ -66,7 +69,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
             if (this.presenters.TryGetValue(presenterType, out var presenter))
                 presenter.Close(animate);
             else
-                Debug.LogWarning($"Attempting to hide screen {presenterType.Name} that was not shown.");
+                this.logger.Warning($"Attempting to hide screen {presenterType.Name} that was not shown.");
         }
 
         public UniTask HideScreenAsync<T>(bool animate = true) where T : IPresenter
@@ -76,7 +79,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Screen
             if (this.presenters.TryGetValue(presenterType, out var presenter))
                 return presenter.CloseAsync(animate);
 
-            Debug.LogWarning($"Attempting to hide screen {presenterType.Name} that was not shown.");
+            this.logger.Warning($"Attempting to hide screen {presenterType.Name} that was not shown.");
             return UniTask.CompletedTask;
         }
 

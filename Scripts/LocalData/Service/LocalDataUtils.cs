@@ -3,11 +3,15 @@ using GameFoundation.Scripts.LocalData.Interfaces;
 namespace GameFoundation.Scripts.LocalData.Service
 {
     using System;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using Newtonsoft.Json;
     using UnityEngine;
 
     public static class LocalDataUtils
     {
+        private static readonly IGameLogger Logger = new LoggerService();
+
         public static void SaveData<T>(string key, T data)
         {
             try
@@ -18,7 +22,7 @@ namespace GameFoundation.Scripts.LocalData.Service
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to save data for key: {key}. Error: {e.Message}");
+                Logger.Error($"Failed to save data for key: {key}. Error: {e.Message}");
             }
         }
 
@@ -34,7 +38,7 @@ namespace GameFoundation.Scripts.LocalData.Service
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load data for key: {key}. Error: {e.Message}");
+                Logger.Error($"Failed to load data for key: {key}. Error: {e.Message}");
             }
             var data = new T();
             ((ILocalData)data).Reset();

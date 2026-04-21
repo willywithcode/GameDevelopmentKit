@@ -4,16 +4,18 @@ namespace GameFoundation.Scripts.Patterns.MVP.DI
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.Patterns.MVP.Attribute;
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.Screen;
     using GameFoundation.Scripts.Patterns.MVP.View;
-    using UnityEngine;
     using VContainer;
     using VContainer.Unity;
 
     public static class MVPVContainer
     {
+        private static readonly IGameLogger Logger = new LoggerService();
         private static readonly List<Type> PresenterTypesToAutoInit = new();
 
         public static void RegisterMVP(this IContainerBuilder builder)
@@ -62,17 +64,17 @@ namespace GameFoundation.Scripts.Patterns.MVP.DI
                             PresenterTypesToAutoInit.Add(presenterType);
                         }
 
-                        Debug.Log($"Registered presenter with attribute: {presenterType.Name} (Singleton: {attribute.IsSingleton}, AutoInit: {attribute.AutoInit})");
+                        Logger.Info($"Registered presenter with attribute: {presenterType.Name} (Singleton: {attribute.IsSingleton}, AutoInit: {attribute.AutoInit})");
                     }
                     else
                     {
                         builder.Register(presenterType, Lifetime.Transient).AsSelf().AsImplementedInterfaces();
-                        Debug.Log($"Registered presenter: {presenterType.Name}");
+                        Logger.Info($"Registered presenter: {presenterType.Name}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Failed to register presenter {presenterType.Name}: {ex.Message}");
+                    Logger.Error($"Failed to register presenter {presenterType.Name}: {ex.Message}");
                 }
             }
         }
@@ -83,11 +85,13 @@ namespace GameFoundation.Scripts.Patterns.MVP.DI
     {
         private readonly IObjectResolver resolver;
         private readonly List<Type>      presenterTypes;
+        private readonly IGameLogger     logger;
 
-        public PresenterAutoInitializer(IObjectResolver resolver, List<Type> presenterTypes)
+        public PresenterAutoInitializer(IObjectResolver resolver, List<Type> presenterTypes, IGameLogger logger = null)
         {
             this.resolver       = resolver;
             this.presenterTypes = presenterTypes;
+            this.logger         = logger ?? new LoggerService();
         }
 
         public void Initialize()
@@ -97,11 +101,11 @@ namespace GameFoundation.Scripts.Patterns.MVP.DI
                 try
                 {
                     this.resolver.Resolve(presenterType);
-                    Debug.Log($"Auto-initialized presenter: {presenterType.Name}");
+                    this.logger.Info($"Auto-initialized presenter: {presenterType.Name}");
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Failed to auto-initialize presenter {presenterType.Name}: {ex.Message}");
+                    this.logger.Error($"Failed to auto-initialize presenter {presenterType.Name}: {ex.Message}");
                 }
             }
         }

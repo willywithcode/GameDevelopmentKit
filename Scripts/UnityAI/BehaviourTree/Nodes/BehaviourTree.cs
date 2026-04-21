@@ -1,11 +1,13 @@
 namespace GameFoundation.Scripts.UnityAI.BehaviourTree.Nodes
 {
     using System.Text;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.UnityAI.BehaviourTree.Policies;
-    using UnityEngine;
 
     public class BehaviourTree : Node
     {
+        private static readonly IGameLogger Logger = new LoggerService();
         private readonly IPolicy policy;
 
         public BehaviourTree(string name, IPolicy policy = null) : base(name)
@@ -25,7 +27,7 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree.Nodes
         {
             var sb = new StringBuilder();
             PrintNode(this, 0, sb);
-            Debug.Log(sb.ToString());
+            Logger.Info(sb.ToString());
         }
 
         private static void PrintNode(Node node, int indentLevel, StringBuilder sb)

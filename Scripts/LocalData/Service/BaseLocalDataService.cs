@@ -1,15 +1,18 @@
 namespace GameFoundation.Scripts.LocalData.Service
 {
     using System;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.LocalData.Interfaces;
-    using UnityEngine;
 
     public abstract class BaseLocalDataService<T> : ILocalDataService<T> where T : ILocalData, new()
     {
+        private readonly IGameLogger logger;
         public T Data { get; private set; }
 
-        protected BaseLocalDataService()
+        protected BaseLocalDataService(IGameLogger logger = null)
         {
+            this.logger = logger ?? new LoggerService();
             this.Data = new();
             this.Load();
         }
@@ -20,11 +23,11 @@ namespace GameFoundation.Scripts.LocalData.Service
             {
                 var key = this.Data.GetKey();
                 LocalDataUtils.SaveData(key, this.Data);
-                Debug.Log($"Saved data with key: {key}");
+                this.logger.Info($"Saved data with key: {key}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"Error saving data: {e.Message}");
+                this.logger.Error($"Error saving data: {e.Message}");
             }
         }
 
@@ -34,11 +37,11 @@ namespace GameFoundation.Scripts.LocalData.Service
             {
                 var key = this.Data.GetKey();
                 this.Data = LocalDataUtils.LoadData<T>(key);
-                Debug.Log($"Loaded data with key: {key}");
+                this.logger.Info($"Loaded data with key: {key}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"Error loading data: {e.Message}");
+                this.logger.Error($"Error loading data: {e.Message}");
                 this.Data ??= new();
                 this.Data.Reset();
             }
@@ -51,11 +54,11 @@ namespace GameFoundation.Scripts.LocalData.Service
                 var key = this.Data.GetKey();
                 LocalDataUtils.DeleteData(key);
                 this.Data.Reset();
-                Debug.Log($"Deleted data with key: {key}");
+                this.logger.Info($"Deleted data with key: {key}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"Error deleting data: {e.Message}");
+                this.logger.Error($"Error deleting data: {e.Message}");
             }
         }
     }

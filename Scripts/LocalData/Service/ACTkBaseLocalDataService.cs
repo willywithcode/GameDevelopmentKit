@@ -2,9 +2,10 @@ namespace GameFoundation.Scripts.LocalData.Service
 {
     using System;
     using CodeStage.AntiCheat.Storage;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.LocalData.Interfaces;
     using Newtonsoft.Json;
-    using UnityEngine;
 
     /// <summary>
     /// Encrypted local data service backed by ObscuredPrefs (ACTk).
@@ -13,6 +14,7 @@ namespace GameFoundation.Scripts.LocalData.Service
     /// </summary>
     public abstract class ACTkBaseLocalDataService<T> : ILocalDataService<T> where T : ILocalData, new()
     {
+        private readonly IGameLogger logger;
         public T Data { get; private set; }
 
         /// <summary>Fired when save data has been tampered with.</summary>
@@ -21,11 +23,12 @@ namespace GameFoundation.Scripts.LocalData.Service
         /// <summary>Fired when save data was written on a different device.</summary>
         public event Action OnForeignDeviceDetected;
 
-        protected ACTkBaseLocalDataService()
+        protected ACTkBaseLocalDataService(IGameLogger logger = null)
         {
             ObscuredPrefs.NotGenuineDataDetected        += this.HandleTamper;
             ObscuredPrefs.DataFromAnotherDeviceDetected += this.HandleForeignDevice;
 
+            this.logger = logger ?? new LoggerService();
             this.Data = new T();
             this.Load();
         }
@@ -38,11 +41,11 @@ namespace GameFoundation.Scripts.LocalData.Service
                 var json = JsonConvert.SerializeObject(this.Data);
                 ObscuredPrefs.SetString(key, json);
                 ObscuredPrefs.Save();
-                Debug.Log($"[ACTkLocalData] Saved: {key}");
+                this.logger.Info($"[ACTkLocalData] Saved: {key}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ACTkLocalData] Error saving: {e.Message}");
+                this.logger.Error($"[ACTkLocalData] Error saving: {e.Message}");
             }
         }
 
@@ -59,11 +62,11 @@ namespace GameFoundation.Scripts.LocalData.Service
 
                 if (string.IsNullOrEmpty(json)) this.Data.Reset();
 
-                Debug.Log($"[ACTkLocalData] Loaded: {key}");
+                this.logger.Info($"[ACTkLocalData] Loaded: {key}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ACTkLocalData] Error loading: {e.Message}");
+                this.logger.Error($"[ACTkLocalData] Error loading: {e.Message}");
                 this.Data ??= new T();
                 this.Data.Reset();
             }
@@ -77,24 +80,24 @@ namespace GameFoundation.Scripts.LocalData.Service
                 ObscuredPrefs.DeleteKey(key);
                 ObscuredPrefs.Save();
                 this.Data.Reset();
-                Debug.Log($"[ACTkLocalData] Deleted: {key}");
+                this.logger.Info($"[ACTkLocalData] Deleted: {key}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ACTkLocalData] Error deleting: {e.Message}");
+                this.logger.Error($"[ACTkLocalData] Error deleting: {e.Message}");
             }
         }
 
         private void HandleTamper()
         {
-            Debug.LogWarning($"[ACTkLocalData] Tamper detected on: {this.Data.GetKey()}");
+            this.logger.Warning($"[ACTkLocalData] Tamper detected on: {this.Data.GetKey()}");
             this.Data.Reset();
             this.OnTamperDetected?.Invoke();
         }
 
         private void HandleForeignDevice()
         {
-            Debug.LogWarning($"[ACTkLocalData] Foreign device save detected on: {this.Data.GetKey()}");
+            this.logger.Warning($"[ACTkLocalData] Foreign device save detected on: {this.Data.GetKey()}");
             this.OnForeignDeviceDetected?.Invoke();
         }
     }

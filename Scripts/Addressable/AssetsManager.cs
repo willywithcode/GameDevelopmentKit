@@ -7,6 +7,8 @@ namespace GameFoundation.Scripts.Addressable
     using System.Collections.Generic;
     using System.Linq;
     using Cysharp.Threading.Tasks;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using UnityEngine;
     using UnityEngine.AddressableAssets;
     using UnityEngine.Networking;
@@ -15,6 +17,13 @@ namespace GameFoundation.Scripts.Addressable
 
     public class AssetsManager : IAssetsManager
     {
+        private readonly IGameLogger logger;
+
+        public AssetsManager(IGameLogger logger = null)
+        {
+            this.logger = logger ?? new LoggerService();
+        }
+
         // Asset cache: key -> (asset, handle, refCount)
         private readonly ConcurrentDictionary<string, (Object asset, AsyncOperationHandle handle, int refCount)> assetCache = new();
 
@@ -40,7 +49,7 @@ namespace GameFoundation.Scripts.Addressable
             var initHandle = Addressables.InitializeAsync(autoReleaseHandle: false);
             await initHandle.Task.AsUniTask();
             if (initHandle.Status == AsyncOperationStatus.Failed) {
-                Debug.LogError($"Addressables initialization failed: {initHandle.OperationException?.Message}");
+                this.logger.Error($"Addressables initialization failed: {initHandle.OperationException?.Message}");
                 return;
             }
             lock (this.initGate) this.isInitialized = true;

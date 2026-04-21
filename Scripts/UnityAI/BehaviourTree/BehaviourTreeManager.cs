@@ -5,13 +5,20 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree
     using System.Threading;
     using Cysharp.Threading.Tasks;
     using Cysharp.Threading.Tasks.Linq;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.UnityAI.BehaviourTree.Nodes;
-    using UnityEngine;
     using VContainer.Unity;
 
     public class BehaviourTreeManager : IBehaviourTreeManager, ITickable
     {
+        private readonly IGameLogger logger;
         private Dictionary<string, (bool isRunning, BehaviourTree behaviourTree)> behaviourTrees = new();
+
+        public BehaviourTreeManager(IGameLogger logger = null)
+        {
+            this.logger = logger ?? new LoggerService();
+        }
 
         public void AddBehaviourTree(string name, BehaviourTree behaviourTree)
         {
@@ -83,7 +90,7 @@ namespace GameFoundation.Scripts.UnityAI.BehaviourTree
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"Error processing behaviour tree {tree.Key}: {e.Message}");
+                    this.logger.Error($"Error processing behaviour tree {tree.Key}: {e.Message}");
                     throw;
                 }
             }

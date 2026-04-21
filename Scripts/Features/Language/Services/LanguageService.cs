@@ -8,6 +8,8 @@ namespace GameFoundation.Scripts.Features.Language.Services
     using GameFoundation.Scripts.Features.Language.Blueprints;
     using GameFoundation.Scripts.Features.Language.LocalDatas;
     using GameFoundation.Scripts.Features.Language.Signals;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.Features.UserExperience.Services;
     using MessagePipe;
     using Newtonsoft.Json;
@@ -28,17 +30,20 @@ namespace GameFoundation.Scripts.Features.Language.Services
         private readonly List<string>                      availableLanguages;
         private readonly string                            defaultLanguageName;
         private readonly Dictionary<string, string>        languageCodeToNameMap;
+        private readonly IGameLogger                       logger;
 
         public LanguageService(
             LanguageLocalDataService    languageLocalDataService,
             IAssetsManager              assetsManager,
             IPublisher<OnLanguageChange> languageChangePublisher,
-            UserExperienceService       userExperienceService
+            UserExperienceService       userExperienceService,
+            IGameLogger                 logger = null
         )
         {
             this.languageLocalDataService = languageLocalDataService;
             this.languageChangePublisher  = languageChangePublisher;
             this.userExperienceService    = userExperienceService;
+            this.logger                   = logger ?? new LoggerService();
             this.languageBlueprint        = this.LoadLanguageBlueprint(assetsManager);
             this.languageDataMap          = this.LoadLanguageDatas(assetsManager, this.languageBlueprint);
 
@@ -72,7 +77,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
                 jsonAsset = assetsManager.LoadAsset<TextAsset>("LanguageBlueprint");
                 if (jsonAsset == null)
                 {
-                    Debug.LogError("Language blueprint JSON asset with key 'LanguageBlueprint' was not found.");
+                    this.logger.Error("Language blueprint JSON asset with key 'LanguageBlueprint' was not found.");
                     return this.CreateFallbackBlueprint();
                 }
 
@@ -82,7 +87,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load language blueprint JSON: {e}");
+                this.logger.Error($"Failed to load language blueprint JSON: {e}");
                 return this.CreateFallbackBlueprint();
             }
             finally
@@ -177,7 +182,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
 
                 if (string.IsNullOrEmpty(entry.address))
                 {
-                    Debug.LogWarning($"Language '{entry.languageName}' does not have an address configured in LanguageBlueprint.");
+                    this.logger.Warning($"Language '{entry.languageName}' does not have an address configured in LanguageBlueprint.");
                     languages[entry.languageName] = this.EnsureLanguageDataIntegrity(null, entry.languageName);
                     continue;
                 }
@@ -188,7 +193,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
                     languageAsset = assetsManager.LoadAsset<TextAsset>(entry.address);
                     if (languageAsset == null)
                     {
-                        Debug.LogError($"Failed to load language asset for '{entry.languageName}' at address '{entry.address}'.");
+                        this.logger.Error($"Failed to load language asset for '{entry.languageName}' at address '{entry.address}'.");
                         languages[entry.languageName] = this.EnsureLanguageDataIntegrity(null, entry.languageName);
                         continue;
                     }
@@ -199,7 +204,7 @@ namespace GameFoundation.Scripts.Features.Language.Services
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"Failed to parse language JSON for '{entry.languageName}' at address '{entry.address}': {e}");
+                    this.logger.Error($"Failed to parse language JSON for '{entry.languageName}' at address '{entry.address}': {e}");
                     languages[entry.languageName] = this.EnsureLanguageDataIntegrity(null, entry.languageName);
                 }
                 finally
@@ -373,15 +378,15 @@ namespace GameFoundation.Scripts.Features.Language.Services
                     this.languageCodeToNameMap.TryGetValue(twoLetterCode, out var languageName) &&
                     this.languageDataMap.ContainsKey(languageName))
                 {
-                    Debug.Log($"[LanguageService] Auto-detected system language: {twoLetterCode} -> {languageName}");
+                    this.logger.Info($"[LanguageService] Auto-detected system language: {twoLetterCode} -> {languageName}");
                     return languageName;
                 }
 
-                Debug.Log($"[LanguageService] System language '{twoLetterCode}' not available, falling back to default: {this.defaultLanguageName}");
+                this.logger.Info($"[LanguageService] System language '{twoLetterCode}' not available, falling back to default: {this.defaultLanguageName}");
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[LanguageService] Failed to detect system language: {e.Message}");
+                this.logger.Warning($"[LanguageService] Failed to detect system language: {e.Message}");
             }
 
             return this.defaultLanguageName;

@@ -6,6 +6,8 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Features.AudioSystem.Entities;
     using GameFoundation.Scripts.Features.AudioSystem.LocalDatas;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using GameFoundation.Scripts.Patterns.ObjectPooling;
     using UnityEngine;
     using VContainer.Unity;
@@ -25,15 +27,18 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         private readonly IObjectPooling        objectPooling;
         private readonly IAssetsManager        assetsManager;
         private readonly SoundLocalDataService soundLocalDataService;
+        private readonly IGameLogger           logger;
 
         public AudioManagerService(
             IObjectPooling        objectPooling,
             IAssetsManager        assetsManager,
-            SoundLocalDataService soundLocalDataService)
+            SoundLocalDataService soundLocalDataService,
+            IGameLogger           logger = null)
         {
             this.objectPooling         = objectPooling;
             this.assetsManager         = assetsManager;
             this.soundLocalDataService = soundLocalDataService;
+            this.logger                = logger ?? new LoggerService();
         }
 
         #endregion
@@ -80,7 +85,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             }
             else
             {
-                Debug.LogWarning($"SFX with ID {audioId} is not currently playing or does not exist.");
+                this.logger.Warning($"SFX with ID {audioId} is not currently playing or does not exist.");
             }
         }
 

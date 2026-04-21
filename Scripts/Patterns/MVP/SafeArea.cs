@@ -1,5 +1,7 @@
 namespace GameFoundation.Scripts.Patterns.MVP
 {
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using UnityEngine;
 
     /// <summary>
@@ -14,6 +16,7 @@ namespace GameFoundation.Scripts.Patterns.MVP
     /// </summary>
     public class SafeArea : MonoBehaviour
     {
+        private static readonly IGameLogger Logger = new LoggerService();
         [SerializeField] private bool conformX = true; // Conform to screen safe area on X-axis (default true, disable to ignore)
 
         [SerializeField] private bool conformY = true; // Conform to screen safe area on Y-axis (default true, disable to ignore)
@@ -27,7 +30,7 @@ namespace GameFoundation.Scripts.Patterns.MVP
 
             if (this.panel == null)
             {
-                Debug.LogError("Cannot apply safe area - no RectTransform found on " + this.name);
+                Logger.Error("Cannot apply safe area - no RectTransform found on " + this.name);
                 Destroy(this.gameObject);
             }
 

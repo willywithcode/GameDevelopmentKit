@@ -3,6 +3,8 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
     using System.Collections.Generic;
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Addressable;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using UnityEngine;
     using VContainer;
     using ZLinq;
@@ -14,14 +16,17 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
 
         private readonly IAssetsManager  assetsManager;
         private readonly IObjectResolver objectResolver;
+        private readonly IGameLogger     logger;
 
         public ObjectPoolManager(
             IAssetsManager  assetsManager,
-            IObjectResolver objectResolver
+            IObjectResolver objectResolver,
+            IGameLogger     logger = null
         )
         {
             this.assetsManager  = assetsManager;
             this.objectResolver = objectResolver;
+            this.logger         = logger ?? new LoggerService();
         }
 
         #endregion
@@ -84,7 +89,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
         {
             if (!this.pools.ContainsKey(pooler.key))
             {
-                Debug.LogError("Pooler not found" + pooler.key);
+                this.logger.Error("Pooler not found" + pooler.key);
                 return;
             }
             pooler.OnDespawn().Forget();
@@ -129,7 +134,7 @@ namespace GameFoundation.Scripts.Patterns.ObjectPooling
                 }
                 return list;
             }
-            Debug.LogError("Pooler not found" + key);
+            this.logger.Error("Pooler not found" + key);
             return new List<T>();
         }
     }

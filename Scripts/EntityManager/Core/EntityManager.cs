@@ -4,6 +4,8 @@ namespace GameFoundation.Scripts.EntityManager.Core
     using System.Collections.Generic;
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Addressable;
+    using IGameLogger = GameFoundation.Scripts.Features.Logger.Services.ILogger;
+    using LoggerService = GameFoundation.Scripts.Features.Logger.Services.LoggerService;
     using UnityEngine;
     using VContainer;
     using VContainer.Unity;
@@ -16,14 +18,17 @@ namespace GameFoundation.Scripts.EntityManager.Core
 
         private readonly IAssetsManager  assetsManager;
         private readonly IObjectResolver objectResolver;
+        private readonly IGameLogger     logger;
 
         public EntityManager(
             IAssetsManager  assetsManager,
-            IObjectResolver objectResolver
+            IObjectResolver objectResolver,
+            IGameLogger     logger = null
         )
         {
             this.assetsManager  = assetsManager;
             this.objectResolver = objectResolver;
+            this.logger         = logger ?? new LoggerService();
         }
 
         #endregion
@@ -113,7 +118,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
         {
             if (!this.pools.ContainsKey(entity.Key))
             {
-                Debug.LogError($"[EntityManager] Entity pool not found: {entity.Key}");
+                this.logger.Error($"[EntityManager] Entity pool not found: {entity.Key}");
                 return;
             }
 
@@ -149,7 +154,7 @@ namespace GameFoundation.Scripts.EntityManager.Core
         {
             if (!this.pools.ContainsKey(key))
             {
-                Debug.LogError($"[EntityManager] Entity pool not found: {key}");
+                this.logger.Error($"[EntityManager] Entity pool not found: {key}");
                 return new List<T>();
             }
 
