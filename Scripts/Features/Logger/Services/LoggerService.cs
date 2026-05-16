@@ -1,7 +1,10 @@
 namespace GameFoundation.Scripts.Features.Logger.Services
 {
+    using System;
+    using System.Diagnostics;
+    using System.Reflection;
+    using System.Runtime.CompilerServices;
     using UnityEngine;
-    using Debug = UnityEngine.Debug;
 
     public class LoggerService : ILogger
     {
@@ -17,69 +20,193 @@ namespace GameFoundation.Scripts.Features.Logger.Services
         public bool IsEnabled => this.isEnabled;
         public LogLevel MinLogLevel => this.minLogLevel;
 
+        [HideInCallstack]
         public void SetEnabled(bool enabled)
         {
             this.isEnabled = enabled;
         }
 
+        [HideInCallstack]
         public void SetMinLogLevel(LogLevel level)
         {
             this.minLogLevel = level;
         }
 
-        public void Log(string message, LogLevel level = LogLevel.Info)
+        [HideInCallstack]
+        public void Log(
+            string message,
+            LogLevel level = LogLevel.Info,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
         {
-            if (!this.isEnabled || level < this.minLogLevel) return;
+            this.Write(level, message, new CallerInfo(callerMemberName, callerFilePath, callerLineNumber));
+        }
+
+        [HideInCallstack]
+        public void Debug(
+            string message,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            this.Write(LogLevel.Debug, message, new CallerInfo(callerMemberName, callerFilePath, callerLineNumber));
+#endif
+        }
+
+        [HideInCallstack]
+        public void Info(
+            string message,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
+        {
+            this.Write(LogLevel.Info, message, new CallerInfo(callerMemberName, callerFilePath, callerLineNumber));
+        }
+
+        [HideInCallstack]
+        public void Warning(
+            string message,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
+        {
+            this.Write(LogLevel.Warning, message, new CallerInfo(callerMemberName, callerFilePath, callerLineNumber));
+        }
+
+        [HideInCallstack]
+        public void Error(
+            string message,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
+        {
+            this.Write(LogLevel.Error, message, new CallerInfo(callerMemberName, callerFilePath, callerLineNumber));
+        }
+
+        [HideInCallstack]
+        public void LogFormat(LogLevel level, string format, params object[] args)
+        {
+            this.Write(level, string.Format(format, args), FindExternalCaller());
+        }
+
+        [HideInCallstack]
+        private void Write(LogLevel level, string message, CallerInfo callerInfo)
+        {
+            if (!this.isEnabled || level < this.minLogLevel)
+            {
+                return;
+            }
+
+            var formattedMessage = FormatMessage(level, message, callerInfo);
 
             switch (level)
             {
                 case LogLevel.Debug:
-                    this.Debug(message);
-                    break;
                 case LogLevel.Info:
-                    this.Info(message);
+                    UnityEngine.Debug.Log(formattedMessage);
                     break;
                 case LogLevel.Warning:
-                    this.Warning(message);
+                    UnityEngine.Debug.LogWarning(formattedMessage);
                     break;
                 case LogLevel.Error:
-                    this.Error(message);
+                    UnityEngine.Debug.LogError(formattedMessage);
+                    break;
+                default:
+                    UnityEngine.Debug.Log(formattedMessage);
                     break;
             }
         }
 
-        public void Debug(string message)
+        [HideInCallstack]
+        private static string FormatMessage(LogLevel level, string message, CallerInfo callerInfo)
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (!this.isEnabled || this.minLogLevel > LogLevel.Debug) return;
-            UnityEngine.Debug.Log(string.Format(TagFormat, DebugTag, message));
+            var taggedMessage = string.Format(TagFormat, GetTag(level), message);
+
+#if UNITY_EDITOR
+            return taggedMessage;
+#else
+            var source = callerInfo.ToUnitySourceLocation();
+            return string.IsNullOrEmpty(source)
+                ? taggedMessage
+                : $"{taggedMessage}\n{source}";
 #endif
         }
 
-        public void Info(string message)
+        [HideInCallstack]
+        private static string GetTag(LogLevel level)
         {
-            if (!this.isEnabled || this.minLogLevel > LogLevel.Info) return;
-            UnityEngine.Debug.Log(string.Format(TagFormat, InfoTag, message));
+            return level switch
+            {
+                LogLevel.Debug   => DebugTag,
+                LogLevel.Info    => InfoTag,
+                LogLevel.Warning => WarningTag,
+                LogLevel.Error   => ErrorTag,
+                _                => InfoTag
+            };
         }
 
-        public void Warning(string message)
+        [HideInCallstack]
+        private static CallerInfo FindExternalCaller()
         {
-            if (!this.isEnabled || this.minLogLevel > LogLevel.Warning) return;
-            UnityEngine.Debug.LogWarning(string.Format(TagFormat, WarningTag, message));
+            var loggerType = typeof(LoggerService);
+            var stackTrace = new StackTrace(true);
+
+            for (var i = 0; i < stackTrace.FrameCount; i++)
+            {
+                var frame = stackTrace.GetFrame(i);
+                var method = frame?.GetMethod();
+                if (method == null || IsLoggerFrame(method, loggerType))
+                {
+                    continue;
+                }
+
+                return new CallerInfo(method.Name, frame.GetFileName(), frame.GetFileLineNumber());
+            }
+
+            return CallerInfo.Empty;
         }
 
-        public void Error(string message)
+        [HideInCallstack]
+        private static bool IsLoggerFrame(MethodBase method, Type loggerType)
         {
-            if (!this.isEnabled || this.minLogLevel > LogLevel.Error) return;
-            UnityEngine.Debug.LogError(string.Format(TagFormat, ErrorTag, message));
+            var declaringType = method.DeclaringType;
+            return declaringType == loggerType || declaringType?.DeclaringType == loggerType;
         }
 
-        public void LogFormat(LogLevel level, string format, params object[] args)
+        private readonly struct CallerInfo
         {
-            if (!this.isEnabled || level < this.minLogLevel) return;
+            public static readonly CallerInfo Empty = new CallerInfo(string.Empty, string.Empty, 0);
 
-            var message = string.Format(format, args);
-            this.Log(message, level);
+            public CallerInfo(string memberName, string filePath, int lineNumber)
+            {
+                this.memberName = memberName;
+                this.filePath = filePath;
+                this.lineNumber = lineNumber;
+            }
+
+            private readonly string memberName;
+            private readonly string filePath;
+            private readonly int    lineNumber;
+
+            public string ToUnitySourceLocation()
+            {
+                if (string.IsNullOrEmpty(this.filePath) || this.lineNumber <= 0)
+                {
+                    return string.Empty;
+                }
+
+                var normalizedPath = this.filePath.Replace('\\', '/');
+                var assetsIndex = normalizedPath.LastIndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
+                if (assetsIndex >= 0)
+                {
+                    normalizedPath = normalizedPath.Substring(assetsIndex + 1);
+                }
+
+                var memberLabel = string.IsNullOrEmpty(this.memberName) ? string.Empty : $"{this.memberName} ";
+                return $"{memberLabel}(at {normalizedPath}:{this.lineNumber})";
+            }
         }
     }
 }
