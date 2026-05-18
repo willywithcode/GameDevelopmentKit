@@ -8,6 +8,7 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Blueprints.ScriptableObject.DI;
     using GameFoundation.Scripts.EntityManager.DI;
     using GameFoundation.Scripts.Features.AntiCheat.DI;
+    using GameFoundation.Scripts.Features.Crypto.DI;
     using GameFoundation.Scripts.Features.AudioSystem.DI;
     using GameFoundation.Scripts.Features.InternetChecking.DI;
     using GameFoundation.Scripts.Features.Inventory.DI;
@@ -49,6 +50,7 @@ namespace GameFoundation.Scripts
             builder.RegisterEntityManager();
             builder.RegisterNewDayReset();
             builder.RegisterAntiCheat();
+            builder.RegisterCrypto();
             builder.RegisterPush();
             builder.RegisterAudio();
             builder.RegisterLocalData();

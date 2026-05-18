@@ -8,6 +8,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.GoogleSheets
     using System.Threading.Tasks;
     using GameFoundation.Scripts.Blueprints.CSV.Attributes;
     using GameFoundation.Scripts.Blueprints.CSV.Interfaces;
+    using GameFoundation.Scripts.Features.Crypto;
     using GameFoundation.Scripts.Utils;
     using UnityEditor;
     using UnityEditor.AddressableAssets;
@@ -20,6 +21,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.GoogleSheets
         public Type               BlueprintType { get; set; }
         public string             DataPath      { get; set; }
         public CsvBlueprintSource Source        { get; set; }
+        public bool               Encrypted     { get; set; }
         public string             SheetUrl      { get; set; }
         public SyncStatus         Status        { get; set; } = SyncStatus.Idle;
         public string             Error         { get; set; }
@@ -53,6 +55,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.GoogleSheets
                     BlueprintType = type,
                     DataPath      = csvAttr.DataPath,
                     Source        = csvAttr.Source,
+                    Encrypted     = csvAttr.Encrypted,
                     SheetUrl      = sheetAttr?.BuildExportUrl(),
                 };
 
@@ -80,22 +83,29 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.GoogleSheets
                 return;
             }
 
-            var savePath = this.ResolveSavePath(state);
-            if (savePath == null)
-            {
-                state.Status = SyncStatus.Failed;
-                state.Error  = $"Could not resolve save path for '{state.DataPath}' ({state.Source})";
-                return;
-            }
-
             try
             {
-                var dir = Path.GetDirectoryName(savePath);
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                if (state.Encrypted)
+                {
+                    this.SaveEncrypted(state, fetchResult.Content);
+                }
+                else
+                {
+                    var savePath = this.ResolveSavePath(state);
+                    if (savePath == null)
+                    {
+                        state.Status = SyncStatus.Failed;
+                        state.Error  = $"Could not resolve save path for '{state.DataPath}' ({state.Source})";
+                        return;
+                    }
 
-                File.WriteAllText(savePath, fetchResult.Content);
-                AssetDatabase.ImportAsset(savePath);
+                    var dir = Path.GetDirectoryName(savePath);
+                    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
+
+                    File.WriteAllText(savePath, fetchResult.Content);
+                    AssetDatabase.ImportAsset(savePath);
+                }
 
                 state.Status       = SyncStatus.Success;
                 state.LastSyncedAt = DateTime.Now;
@@ -119,6 +129,40 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.GoogleSheets
                 await this.SyncAsync(state, fetcher, token);
                 progress?.Report(++done);
             }
+        }
+
+        private void SaveEncrypted(BlueprintSyncState state, string plainCsv)
+        {
+            var projectRoot  = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            var sourceFolder = EditorPrefs.GetString("QuantumGame.EncryptTool.SourceFolder", "Assets/SourceData~");
+            var sourcePath   = Path.Combine(projectRoot, sourceFolder, state.DataPath + ".csv");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(sourcePath)!);
+            File.WriteAllText(sourcePath, plainCsv);
+
+            var encryptedPath = this.ResolveAddressablePath(state);
+            if (encryptedPath != null)
+            {
+                File.WriteAllBytes(encryptedPath, CryptoUtils.Encrypt(plainCsv));
+                AssetDatabase.ImportAsset(encryptedPath);
+            }
+        }
+
+        private string ResolveAddressablePath(BlueprintSyncState state)
+        {
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null) return null;
+
+            foreach (var group in settings.groups)
+            {
+                if (group == null) continue;
+                foreach (var entry in group.entries)
+                {
+                    if (string.Equals(entry.address, state.DataPath, StringComparison.OrdinalIgnoreCase))
+                        return entry.AssetPath;
+                }
+            }
+            return null;
         }
 
         private string ResolveSavePath(BlueprintSyncState state)

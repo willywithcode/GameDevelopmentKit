@@ -48,15 +48,33 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.Validator
 
             var result = new CsvBlueprintValidationResult(type, attr.DataPath, attr.Source);
 
-            var textAsset = LoadCsvAsset(attr, out assetPath);
-            if (textAsset == null)
+            string csvText;
+            if (attr.Encrypted)
             {
-                result.AddIssue(ValidationStatus.Error, $"CSV file not found at '{attr.DataPath}'");
-                return result;
+                var sourcePath = ResolveSourceDataPath(attr.DataPath);
+                if (!File.Exists(sourcePath))
+                {
+                    result.AddIssue(ValidationStatus.Error, $"Source CSV not found at '{sourcePath}'. Run Tools > QuantumGame > Encrypt Game Data first.");
+                    return result;
+                }
+
+                csvText   = File.ReadAllText(sourcePath);
+                assetPath = sourcePath;
+            }
+            else
+            {
+                var textAsset = LoadCsvAsset(attr, out assetPath);
+                if (textAsset == null)
+                {
+                    result.AddIssue(ValidationStatus.Error, $"CSV file not found at '{attr.DataPath}'");
+                    return result;
+                }
+
+                csvText = textAsset.text;
             }
 
             CsvTable table;
-            try { table = CsvRawParser.Parse(textAsset.text); }
+            try { table = CsvRawParser.Parse(csvText); }
             catch (Exception ex)
             {
                 result.AddIssue(ValidationStatus.Error, $"Failed to parse CSV: {ex.Message}");
@@ -222,6 +240,13 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Editor.Validator
 
         private static string GetCellValue(IReadOnlyList<string> row, int index)
             => index >= 0 && index < row.Count ? row[index] : string.Empty;
+
+        private static string ResolveSourceDataPath(string dataPath)
+        {
+            var sourceFolder = EditorPrefs.GetString("QuantumGame.EncryptTool.SourceFolder", "Assets/SourceData~");
+            var projectRoot  = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, ".."));
+            return System.IO.Path.Combine(projectRoot, sourceFolder, dataPath + ".csv");
+        }
 
         private static string NormalizeResourcePath(string dataPath)
         {

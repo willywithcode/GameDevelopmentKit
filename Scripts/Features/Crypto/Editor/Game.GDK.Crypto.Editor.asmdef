@@ -1,0 +1,8 @@
+{
+  "name": "Game.GDK.Crypto.Editor",
+  "references": [
+    "GameFoundation.Scripts"
+  ],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}

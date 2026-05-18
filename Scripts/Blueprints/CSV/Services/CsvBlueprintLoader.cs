@@ -8,6 +8,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Blueprints.CSV.Attributes;
     using GameFoundation.Scripts.Blueprints.CSV.Interfaces;
+    using GameFoundation.Scripts.Features.Crypto.Services;
     using GameFoundation.Scripts.Utils;
     using UnityEngine;
     using VContainer;
@@ -18,12 +19,14 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
 
         private readonly IObjectResolver objectResolver;
         private readonly IAssetsManager  assetsManager;
+        private readonly ICryptoService  cryptoService;
         private readonly HashSet<Type>   loadedTypes = new();
 
-        public CsvBlueprintLoader(IObjectResolver objectResolver, IAssetsManager assetsManager)
+        public CsvBlueprintLoader(IObjectResolver objectResolver, IAssetsManager assetsManager, ICryptoService cryptoService)
         {
             this.objectResolver = objectResolver;
             this.assetsManager  = assetsManager;
+            this.cryptoService  = cryptoService;
         }
 
         public bool IsLoaded { get; private set; }
@@ -86,7 +89,9 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
 
             try
             {
-                return addressableAsset.text;
+                return attribute.Encrypted
+                    ? this.cryptoService.Decrypt(addressableAsset.bytes)
+                    : addressableAsset.text;
             }
             finally
             {
