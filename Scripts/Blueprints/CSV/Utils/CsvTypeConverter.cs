@@ -4,8 +4,8 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
     using System.Collections;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Linq;
     using UnityEngine;
+    using ZLinq;
 
     public static class CsvTypeConverter
     {
@@ -148,6 +148,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
         {
             if (rawValue.IndexOf(delimiter) < 0)
             {
+                // '|' is an alternative delimiter for collections, used when ',' conflicts with CSV field separator
                 if (delimiter != '|' && rawValue.IndexOf('|') >= 0)
                 {
                     delimiter = '|';
@@ -160,6 +161,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
 
             return rawValue
                 .Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries)
+                .AsValueEnumerable()
                 .Select(value => value.Trim())
                 .ToList();
         }

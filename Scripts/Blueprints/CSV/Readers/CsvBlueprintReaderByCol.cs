@@ -2,7 +2,6 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Readers
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Blueprints.CSV.Interfaces;
     using GameFoundation.Scripts.Blueprints.CSV.Utils;
@@ -12,10 +11,11 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Readers
         public virtual UniTask DeserializeFromCsv(string rawCsv)
         {
             var table = CsvRawParser.Parse(rawCsv);
-            var memberInfos = CsvReflectionCache
-                .GetAllFieldAndProperties(this.GetType())
-                .GroupBy(memberInfo => memberInfo.MemberName, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+            var memberInfos = new Dictionary<string, CsvMemberInfo>(StringComparer.OrdinalIgnoreCase);
+            foreach (var memberInfo in CsvReflectionCache.GetAllFieldAndProperties(this.GetType()))
+            {
+                memberInfos.TryAdd(memberInfo.MemberName, memberInfo);
+            }
 
             foreach (var row in table.Rows)
             {

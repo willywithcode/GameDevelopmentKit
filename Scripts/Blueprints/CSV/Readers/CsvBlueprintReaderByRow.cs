@@ -2,23 +2,31 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Readers
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
     using Cysharp.Threading.Tasks;
     using GameFoundation.Scripts.Blueprints.CSV.Attributes;
     using GameFoundation.Scripts.Blueprints.CSV.Interfaces;
     using GameFoundation.Scripts.Blueprints.CSV.Utils;
+    using ZLinq;
 
-    public abstract class CsvBlueprintReaderByRow<TKey, TRecord> : Dictionary<TKey, TRecord>, ICsvBlueprintReader
+    public abstract class CsvBlueprintReaderByRow<TKey, TRecord> : ICsvBlueprintReader
     {
+        private readonly Dictionary<TKey, TRecord> data = new();
+
+        public int   Count                          => this.data.Count;
+        public TRecord this[TKey key]               => this.data[key];
+        public bool ContainsKey(TKey key)           => this.data.ContainsKey(key);
+        public bool TryGetValue(TKey key, out TRecord value) => this.data.TryGetValue(key, out value);
+
         public virtual UniTask DeserializeFromCsv(string rawCsv)
         {
-            this.Clear();
+            this.data.Clear();
 
             var table = CsvRawParser.Parse(rawCsv);
             var headerLookup = table.Header
+                .AsValueEnumerable()
                 .Select((header, index) => (header, index))
-                .ToDictionary(data => data.header, data => data.index, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(d => d.header, d => d.index, StringComparer.OrdinalIgnoreCase);
 
             var recordType = typeof(TRecord);
             var keyField   = this.GetKeyField(recordType);
@@ -51,12 +59,12 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Readers
                 }
 
                 var convertedKey = (TKey)CsvTypeConverter.ConvertFromString(rawKey, typeof(TKey));
-                if (this.ContainsKey(convertedKey))
+                if (this.data.ContainsKey(convertedKey))
                 {
                     throw new InvalidOperationException($"Duplicate key '{convertedKey}' in blueprint '{this.GetType().Name}'.");
                 }
 
-                this.Add(convertedKey, record);
+                this.data.Add(convertedKey, record);
             }
 
             return UniTask.CompletedTask;
@@ -64,7 +72,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Readers
 
         public TRecord GetDataById(TKey id)
         {
-            if (this.TryGetValue(id, out var record))
+            if (this.data.TryGetValue(id, out var record))
             {
                 return record;
             }
@@ -86,7 +94,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Readers
                 return blueprintAttribute.HeaderKey;
             }
 
-            var firstMember = CsvReflectionCache.GetAllFieldAndProperties(recordType).FirstOrDefault();
+            var firstMember = CsvReflectionCache.GetAllFieldAndProperties(recordType).AsValueEnumerable().FirstOrDefault();
             if (firstMember == null)
             {
                 throw new InvalidOperationException($"Blueprint record type '{recordType.FullName}' does not contain any public field or property.");

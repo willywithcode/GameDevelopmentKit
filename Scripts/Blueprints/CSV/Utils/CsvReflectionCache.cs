@@ -3,8 +3,8 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
+    using ZLinq;
 
     public static class CsvReflectionCache
     {
@@ -20,21 +20,25 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
 
                 results.AddRange(type
                     .GetFields(BindingFlags.Instance | BindingFlags.Public)
+                    .AsValueEnumerable()
                     .Where(fieldInfo => !fieldInfo.IsInitOnly)
                     .Select(fieldInfo => new CsvMemberInfo(
                         fieldInfo.Name,
                         fieldInfo.FieldType,
                         fieldInfo.GetValue,
-                        fieldInfo.SetValue)));
+                        fieldInfo.SetValue))
+                    .ToList());
 
                 results.AddRange(type
                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .AsValueEnumerable()
                     .Where(propertyInfo => propertyInfo.CanRead && propertyInfo.CanWrite && propertyInfo.GetIndexParameters().Length == 0)
                     .Select(propertyInfo => new CsvMemberInfo(
                         propertyInfo.Name,
                         propertyInfo.PropertyType,
                         propertyInfo.GetValue,
-                        propertyInfo.SetValue)));
+                        propertyInfo.SetValue))
+                    .ToList());
 
                 return results;
             });

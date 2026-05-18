@@ -18,18 +18,26 @@ There are two reader types:
 
 ---
 
-## 2. Existing code structure
+## 2. Code structure
 
 Location: `Assets\GDK\Scripts\Blueprints\CSV`
 
+**Runtime**
 - `Attributes\CsvBlueprintAttribute.cs`
 - `Attributes\CsvHeaderKeyAttribute.cs`
+- `Attributes\GoogleSheetSourceAttribute.cs`
 - `Readers\CsvBlueprintReaderByRow.cs`
 - `Readers\CsvBlueprintReaderByCol.cs`
 - `Services\CsvBlueprintLoader.cs`
 - `DI\CsvBlueprintVContainer.cs`
 - `Interfaces\ICsvBlueprintReader.cs`
 - `Interfaces\ICsvBlueprintLoader.cs`
+
+**Editor** (`Editor\` — asmdef: `Game.GDK.CSV.Editor`)
+- `Editor\Validator\CsvBlueprintValidator.cs`
+- `Editor\Validator\CsvBlueprintValidatorWindow.cs`
+- `Editor\GoogleSheets\GoogleSheetsSyncer.cs`
+- `Editor\GoogleSheets\GoogleSheetsSyncWindow.cs`
 
 Already wired in:
 
@@ -204,7 +212,83 @@ await csvBlueprintLoader.LoadBlueprint<MonsterBlueprint>();
 
 ---
 
-## 8. Important rules when authoring CSV
+## 8. Editor tools
+
+### 8.1 CSV Blueprint Validator
+
+**Menu:** `Tools > QuantumGame > Validate CSV Blueprints`
+
+Scans all `ICsvBlueprintReader` implementations and reports:
+
+| Check | Severity |
+|-------|----------|
+| CSV file not found at declared path | Error |
+| Key column missing from header | Error |
+| Duplicate keys | Error |
+| TRecord field has no matching column | Warning |
+| CSV file exists but no blueprint maps to it (orphan) | Warning |
+
+Optional checkbox **"Validate data types"** — tries to parse every cell using `CsvTypeConverter`. Slower but catches format mismatches (e.g. a string in an `int` column) before runtime.
+
+Click any result row → **Ping** highlights the CSV file in the Project window.
+
+---
+
+### 8.2 Google Sheets Sync
+
+**Menu:** `Tools > QuantumGame > Sync CSV from Google Sheets`
+
+Fetches CSV data directly from a Google Sheet and overwrites the local file. Requires the sheet to be **published** (`File > Share > Publish to web`).
+
+#### Setup — add `[GoogleSheetSource]` to the blueprint
+
+```csharp
+[CsvBlueprint("WoolBlockColors", CsvBlueprintSource.Addressable)]
+[GoogleSheetSource("1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms", sheetGid: 0)]
+public class WoolBlockColorBlueprint : CsvBlueprintReaderByRow<WoolBlockColor, WoolBlockColorRecord>
+```
+
+- `spreadsheetId` — the long ID in the Google Sheets URL
+- `sheetGid` — the tab ID (`0` = first sheet); find it in the URL after `#gid=`
+
+The tool builds the export URL automatically:
+```
+https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={sheetGid}
+```
+
+#### Save path
+
+| `CsvBlueprintSource` | Save location |
+|----------------------|---------------|
+| `Addressable` | Resolved via `AddressableAssetSettings` — overwrites the existing registered asset |
+| `Resources` | `Assets/Resources/Blueprints/CSV/{DataPath}.csv` |
+
+#### After sync
+
+- `AssetDatabase.ImportAsset` is called automatically
+- Validator runs automatically — a dialog appears if any errors are found
+- Last-synced timestamps are stored in `Library/GoogleSheetsSyncState.json` (not committed to git)
+
+#### Extending auth
+
+The fetch layer uses `ISheetFetcher`. To add OAuth or Service Account later:
+
+```csharp
+// 1. Add to the enum
+public enum SheetAuthMode { Public, OAuth }
+
+// 2. Implement the interface
+public class OAuthSheetFetcher : ISheetFetcher { ... }
+
+// 3. Add a case to the factory
+SheetAuthMode.OAuth => new OAuthSheetFetcher()
+```
+
+No existing code changes needed.
+
+---
+
+## 9. Important rules when authoring CSV
 
 1. Header names must match `TRecord` field/property names (case-insensitive).
 2. Row-based blueprints must include the key column defined by `CsvHeaderKey`.
@@ -214,7 +298,7 @@ await csvBlueprintLoader.LoadBlueprint<MonsterBlueprint>();
 
 ---
 
-## 9. Quick troubleshooting
+## 10. Quick troubleshooting
 
 - **`must have CsvBlueprintAttribute`**  
   The reader class is missing `[CsvBlueprint(...)]`.
@@ -233,7 +317,7 @@ await csvBlueprintLoader.LoadBlueprint<MonsterBlueprint>();
 
 ---
 
-## 10. Quick template
+## 11. Quick template
 
 ```csharp
 using GameFoundation.Scripts.Blueprints.CSV.Attributes;

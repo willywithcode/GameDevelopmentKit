@@ -4,6 +4,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
     using System.Collections.Generic;
     using System.Reflection;
     using Cysharp.Threading.Tasks;
+    using ZLinq;
     using GameFoundation.Scripts.Addressable;
     using GameFoundation.Scripts.Blueprints.CSV.Attributes;
     using GameFoundation.Scripts.Blueprints.CSV.Interfaces;
@@ -30,11 +31,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
         public async UniTask LoadAllBlueprints()
         {
             var blueprintTypes = ReflectionExtensions.GetAllImplementationsOf(typeof(ICsvBlueprintReader));
-            foreach (var blueprintType in blueprintTypes)
-            {
-                await this.LoadBlueprint(blueprintType);
-            }
-
+            await UniTask.WhenAll(blueprintTypes.AsValueEnumerable().Select(t => this.LoadBlueprint(t)).ToArray());
             this.IsLoaded = true;
         }
 
@@ -62,12 +59,12 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
                 throw new InvalidOperationException($"Can not resolve CSV blueprint reader '{blueprintType.FullName}'.");
             }
 
-            var rawCsv = this.LoadRawCsv(attribute);
+            var rawCsv = await this.LoadRawCsvAsync(attribute);
             await blueprintReader.DeserializeFromCsv(rawCsv);
             this.loadedTypes.Add(blueprintType);
         }
 
-        private string LoadRawCsv(CsvBlueprintAttribute attribute)
+        private async UniTask<string> LoadRawCsvAsync(CsvBlueprintAttribute attribute)
         {
             if (attribute.Source == CsvBlueprintSource.Resources)
             {
@@ -81,7 +78,7 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
                 return textAsset.text;
             }
 
-            var addressableAsset = this.assetsManager.LoadAsset<TextAsset>(attribute.DataPath);
+            var addressableAsset = await this.assetsManager.LoadAssetAsync<TextAsset>(attribute.DataPath);
             if (addressableAsset == null)
             {
                 throw new InvalidOperationException($"Can not load CSV blueprint from Addressables key '{attribute.DataPath}'.");

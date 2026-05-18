@@ -2,8 +2,8 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
+    using ZLinq;
 
     public static class CsvRawParser
     {
@@ -32,8 +32,9 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Utils
             }
 
             var bodyRows = rows
+                .AsValueEnumerable()
                 .Skip(1)
-                .Where(row => row.Any(cell => !string.IsNullOrWhiteSpace(cell)))
+                .Where(row => row.AsValueEnumerable().Any(cell => !string.IsNullOrWhiteSpace(cell)))
                 .Select(row => (IReadOnlyList<string>)row)
                 .ToList();
 

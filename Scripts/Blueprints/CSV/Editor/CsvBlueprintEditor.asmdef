@@ -1,0 +1,10 @@
+{
+  "name": "Game.GDK.CSV.Editor",
+  "references": [
+    "GameFoundation.Scripts",
+    "Unity.Addressables",
+    "Unity.Addressables.Editor"
+  ],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}
