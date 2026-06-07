@@ -1,8 +1,11 @@
 namespace GameFoundation.Scripts.Features.AudioSystem.Services
 {
+    using System;
+
     public interface IAudioManagerService
     {
         public void PlaySfx(string   audioId, bool isLoop = false);
+        public void PlaySfx(string   audioId, float pitch, Action onComplete = null);
         public void PlayMusic(string audioId, bool force  = false, bool isLoop = true);
         public void StopMusic();
         public void PauseMusic();

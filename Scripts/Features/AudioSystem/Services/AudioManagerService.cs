@@ -75,6 +75,23 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
                 .Play().Forget();
         }
 
+        public void PlaySfx(string audioId, float pitch, Action onComplete = null)
+        {
+            var emitter = this.objectPooling.Spawn<SoundEmitter>("SoundEmitter");
+
+            emitter.SetAudioClip(this.assetsManager.LoadAsset<AudioClip>(audioId))
+                .SetLoop(false)
+                .SetMute(this.soundLocalDataService.IsSfxMute)
+                .SetVolume(this.soundLocalDataService.IsSfxMute ? 0 : this.sfxVolume)
+                .SetPitch(pitch)
+                .SetOnPlayComplete(() =>
+                {
+                    onComplete?.Invoke();
+                    this.objectPooling.Despawn(emitter);
+                })
+                .Play().Forget();
+        }
+
         public void StopSfx(string audioId)
         {
             if (this.sfxLoopEmitters.TryGetValue(audioId, out var emitter))
