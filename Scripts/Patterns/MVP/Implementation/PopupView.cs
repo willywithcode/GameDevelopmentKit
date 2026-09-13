@@ -5,8 +5,8 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using GameFoundation.Scripts.Patterns.MVP.Signals;
     using GameFoundation.Scripts.Patterns.MVP.View;
+    using GameFoundation.Scripts.Patterns.SignalBus;
     using GameFoundation.Scripts.Signals;
-    using MessagePipe;
     using UnityEngine;
     using UnityEngine.UI;
 
@@ -176,12 +176,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         public override PresenterType Type => PresenterType.Popup;
 
         public PopupPresenter(
-            IViewFactory                  viewFactory,
-            UICanvas                      uiCanvas,
-            IPublisher<OpenPresenterSignal> openPresenterPublisher,
-            IPublisher<HidePresenterSignal> hidePresenterPublisher,
-            IPublisher<OnButtonClickSignal> buttonClickPublisher
-        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
+            IViewFactory viewFactory,
+            SignalBus    signalBus,
+            UICanvas     uiCanvas
+        ) : base(viewFactory, signalBus, uiCanvas) { }
     }
 
     public class PopupPresenter<TView, TModel> : PopupPresenter<TView>, IPresenter<TModel>
@@ -190,12 +188,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         protected TModel model;
 
         public PopupPresenter(
-            IViewFactory                  viewFactory,
-            UICanvas                      uiCanvas,
-            IPublisher<OpenPresenterSignal> openPresenterPublisher,
-            IPublisher<HidePresenterSignal> hidePresenterPublisher,
-            IPublisher<OnButtonClickSignal> buttonClickPublisher
-        ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
+            IViewFactory viewFactory,
+            SignalBus    signalBus,
+            UICanvas     uiCanvas
+        ) : base(viewFactory, signalBus, uiCanvas) { }
 
         public void SetModel(TModel model) => this.model = model;
     }

@@ -2,8 +2,6 @@
   "name": "GameFoundation.Scripts",
   "references": [
     "VContainer",
-    "MessagePipe",
-    "MessagePipe.VContainer",
     "UniTask",
     "UniTask.Linq",
     "Unity.Addressables",
