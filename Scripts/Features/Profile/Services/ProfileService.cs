@@ -3,7 +3,7 @@ namespace GameFoundation.Scripts.Features.Profile.Services
     using System;
     using GameFoundation.Scripts.Features.Profile.LocalData;
     using GameFoundation.Scripts.Features.Profile.Signals;
-    using MessagePipe;
+    using GameFoundation.Scripts.Patterns.SignalBus;
 
     public class ProfileService
     {
@@ -13,19 +13,16 @@ namespace GameFoundation.Scripts.Features.Profile.Services
         private const int AvatarCount = 10;
         private const string AvatarAddressPrefix = "ProfileAvatar_";
 
-        private readonly ProfileLocalDataService    profileLocalDataService;
-        private readonly IPublisher<OnProfileCreated> profileCreatedPublisher;
-        private readonly IPublisher<OnProfileChanged> profileChangedPublisher;
+        private readonly ProfileLocalDataService profileLocalDataService;
+        private readonly SignalBus               signalBus;
 
         public ProfileService(
-            ProfileLocalDataService     profileLocalDataService,
-            IPublisher<OnProfileCreated> profileCreatedPublisher,
-            IPublisher<OnProfileChanged> profileChangedPublisher
+            ProfileLocalDataService profileLocalDataService,
+            SignalBus               signalBus
         )
         {
             this.profileLocalDataService = profileLocalDataService;
-            this.profileCreatedPublisher = profileCreatedPublisher;
-            this.profileChangedPublisher = profileChangedPublisher;
+            this.signalBus               = signalBus;
 
             this.EnsureProfileCreated();
         }
@@ -97,7 +94,7 @@ namespace GameFoundation.Scripts.Features.Profile.Services
                 DateTime.UtcNow
             );
 
-            this.profileCreatedPublisher.Publish(new OnProfileCreated(
+            this.signalBus.Fire(new OnProfileCreated(
                 this.PlayerId,
                 this.DisplayName,
                 this.AvatarIndex,
@@ -110,7 +107,7 @@ namespace GameFoundation.Scripts.Features.Profile.Services
         private void PublishProfileChanged()
         {
             this.ProfileChanged?.Invoke();
-            this.profileChangedPublisher.Publish(new OnProfileChanged(
+            this.signalBus.Fire(new OnProfileChanged(
                 this.PlayerId,
                 this.DisplayName,
                 this.AvatarIndex,

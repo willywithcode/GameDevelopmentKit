@@ -10,6 +10,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
     using GameFoundation.Scripts.Patterns.MVP.Presenter;
     using UnityEngine;
     using VContainer;
+    using VContainer.Unity;
     using ZLinq;
     using Object = UnityEngine.Object;
 
@@ -75,7 +76,10 @@ namespace GameFoundation.Scripts.Patterns.MVP.View
             var prefab = await this.assetsManager.LoadAssetAsync<GameObject>(prefabPath);
             if (prefab == null) throw new($"Failed to load prefab for view {viewType.Name} at path {prefabPath}");
             var instance = Object.Instantiate(prefab, parent);
-            var view     = instance.GetComponent<T>();
+            // Runs after Awake/OnEnable, so [Inject] members on the prefab and its
+            // children are only usable from the injected method onward.
+            this.resolver.InjectGameObject(instance);
+            var view = instance.GetComponent<T>();
 
             if (view == null) throw new($"Prefab at {prefabPath} does not have component of type {viewType.Name}");
             view.Initialize();

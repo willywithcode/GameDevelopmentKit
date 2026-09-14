@@ -10,7 +10,7 @@ Model-View-Presenter architecture for Unity UI. Uses **VContainer** for DI, **Ad
 - Four presenter flavors: Screen, Popup, Overlay, Splash
 - Async lifecycle with `CancellationToken` for abort-on-close
 - Optional animations — every `Open`/`Close` accepts a `bool animate` flag
-- Signal publishing on open/hide via MessagePipe (`OpenPresenterSignal`, `HidePresenterSignal`)
+- Signal publishing on open/hide via `SignalBus` (`OpenPresenterSignal`, `HidePresenterSignal`)
 
 ## Presenter Types
 
@@ -90,12 +90,10 @@ using Cysharp.Threading.Tasks;
 public class HomeScreenPresenter : ScreenPresenter<HomeScreenView, HomeScreenModel>
 {
     public HomeScreenPresenter(
-        IViewFactory                    viewFactory,
-        UICanvas                        uiCanvas,
-        IPublisher<OpenPresenterSignal> openPresenterPublisher,
-        IPublisher<HidePresenterSignal> hidePresenterPublisher,
-        IPublisher<OnButtonClickSignal> buttonClickPublisher
-    ) : base(viewFactory, uiCanvas, openPresenterPublisher, hidePresenterPublisher, buttonClickPublisher) { }
+        IViewFactory viewFactory,
+        SignalBus    signalBus,
+        UICanvas     uiCanvas
+    ) : base(viewFactory, signalBus, uiCanvas) { }
 
     protected override void Ready()
     {

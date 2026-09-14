@@ -6,25 +6,25 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Services
     using GameFoundation.Scripts.Features.LeaderBoard.LocalData;
     using GameFoundation.Scripts.Features.LeaderBoard.Signals;
     using GameFoundation.Scripts.Features.Profile.Services;
-    using MessagePipe;
+    using GameFoundation.Scripts.Patterns.SignalBus;
 
     public class LeaderBoardService
     {
-        private readonly ILeaderBoardProvider           provider;
-        private readonly ProfileService                 profileService;
-        private readonly IPublisher<OnLeaderBoardUpdated> leaderBoardUpdatedPublisher;
+        private readonly ILeaderBoardProvider provider;
+        private readonly ProfileService       profileService;
+        private readonly SignalBus            signalBus;
 
         private List<LeaderBoardEntry> cachedEntries = new();
 
         public LeaderBoardService(
-            ILeaderBoardProvider            provider,
-            ProfileService                  profileService,
-            IPublisher<OnLeaderBoardUpdated> leaderBoardUpdatedPublisher
+            ILeaderBoardProvider provider,
+            ProfileService       profileService,
+            SignalBus            signalBus
         )
         {
-            this.provider                    = provider;
-            this.profileService              = profileService;
-            this.leaderBoardUpdatedPublisher = leaderBoardUpdatedPublisher;
+            this.provider       = provider;
+            this.profileService = profileService;
+            this.signalBus      = signalBus;
 
             if (this.provider is LocalLeaderBoardProvider localProvider)
             {
@@ -46,7 +46,7 @@ namespace GameFoundation.Scripts.Features.LeaderBoard.Services
         {
             this.cachedEntries = await this.provider.FetchEntries();
             this.ResolveAvatarAddresses();
-            this.leaderBoardUpdatedPublisher.Publish(new OnLeaderBoardUpdated(this.cachedEntries));
+            this.signalBus.Fire(new OnLeaderBoardUpdated(this.cachedEntries));
         }
 
         public async UniTask SubmitScore(int score)
