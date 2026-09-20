@@ -65,22 +65,34 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
             }
 
             this.ResetHiddenState();
-            this.SetInteraction(false);
+            // Swallow input from the very first frame, but keep the popup's own buttons dead until
+            // it has finished arriving. The two flags exist separately for exactly this: blocks-
+            // Raycasts decides whether a tap reaches what is behind the popup, interactable decides
+            // whether the popup's own Selectables answer it. Leaving both off for showDuration let
+            // a second tap fall straight through - two taps on the HUD gear opened Settings twice.
+            this.SetInteraction(interactable: false, blocksRaycasts: true);
 
-            this.activeSequence = DOTween.Sequence();
-            this.activeSequence.Join(this.ContentTransform.DOScale(Vector3.one * this.targetScale, this.showDuration)
+            var sequence = DOTween.Sequence();
+            this.activeSequence = sequence;
+            sequence.Join(this.ContentTransform.DOScale(Vector3.one * this.targetScale, this.showDuration)
                 .SetEase(this.showEase)
                 .SetUpdate(UpdateType.Normal, true));
-            this.activeSequence.Join(this.PanelGroup.DOFade(1f, this.showDuration).SetUpdate(UpdateType.Normal, true));
+            sequence.Join(this.PanelGroup.DOFade(1f, this.showDuration).SetUpdate(UpdateType.Normal, true));
 
             if (this.dimmer)
             {
-                this.activeSequence.Join(this.dimmer.DOFade(this.dimmerTargetAlpha, this.showDuration)
+                sequence.Join(this.dimmer.DOFade(this.dimmerTargetAlpha, this.showDuration)
                     .SetUpdate(UpdateType.Normal, true));
             }
 
-            await this.activeSequence.AsyncWaitForCompletion();
-            this.SetInteraction(true);
+            await sequence.AsyncWaitForCompletion();
+
+            // A newer Show or Hide may have killed this one and taken over. Only the run that still
+            // owns the sequence may hand interaction back, or a superseded run would unlock the
+            // buttons mid-animation and null out the newer run's handle.
+            if (!ReferenceEquals(this.activeSequence, sequence)) return;
+
+            this.SetInteraction(interactable: true, blocksRaycasts: true);
             this.activeSequence = null;
         }
 
@@ -95,26 +107,32 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
 
             if (!animate)
             {
-                this.SetInteraction(false);
+                this.SetInteraction(interactable: false, blocksRaycasts: false);
                 this.gameObject.SetActive(false);
                 this.ResetHiddenState();
                 return;
             }
 
-            this.SetInteraction(false);
+            // Keep swallowing input on the way out too, for the same reason: a tap chasing the
+            // close button must not land on whatever the popup was covering.
+            this.SetInteraction(interactable: false, blocksRaycasts: true);
 
-            this.activeSequence = DOTween.Sequence();
-            this.activeSequence.Join(this.ContentTransform.DOScale(Vector3.zero, this.hideDuration)
+            var sequence = DOTween.Sequence();
+            this.activeSequence = sequence;
+            sequence.Join(this.ContentTransform.DOScale(Vector3.zero, this.hideDuration)
                 .SetEase(this.hideEase)
                 .SetUpdate(UpdateType.Normal, true));
-            this.activeSequence.Join(this.PanelGroup.DOFade(0f, this.hideDuration).SetUpdate(UpdateType.Normal, true));
+            sequence.Join(this.PanelGroup.DOFade(0f, this.hideDuration).SetUpdate(UpdateType.Normal, true));
 
             if (this.dimmer)
             {
-                this.activeSequence.Join(this.dimmer.DOFade(0f, this.hideDuration).SetUpdate(UpdateType.Normal, true));
+                sequence.Join(this.dimmer.DOFade(0f, this.hideDuration).SetUpdate(UpdateType.Normal, true));
             }
 
-            await this.activeSequence.AsyncWaitForCompletion();
+            await sequence.AsyncWaitForCompletion();
+
+            if (!ReferenceEquals(this.activeSequence, sequence)) return;
+
             this.gameObject.SetActive(false);
             this.ResetHiddenState();
             this.activeSequence = null;
@@ -145,14 +163,14 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
                 this.dimmer.color = color;
             }
 
-            this.SetInteraction(true);
+            this.SetInteraction(interactable: true, blocksRaycasts: true);
         }
 
-        private void SetInteraction(bool enable)
+        private void SetInteraction(bool interactable, bool blocksRaycasts)
         {
             var group = this.PanelGroup;
-            group.interactable   = enable;
-            group.blocksRaycasts = enable;
+            group.interactable   = interactable;
+            group.blocksRaycasts = blocksRaycasts;
         }
 
         private void KillActiveSequence()
@@ -167,7 +185,7 @@ namespace GameFoundation.Scripts.Patterns.MVP.Implementation
         {
             this.KillActiveSequence();
             this.ResetHiddenState();
-            this.SetInteraction(false);
+            this.SetInteraction(interactable: false, blocksRaycasts: false);
         }
     }
 
