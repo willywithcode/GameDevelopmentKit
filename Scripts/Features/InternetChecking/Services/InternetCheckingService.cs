@@ -1,39 +1,86 @@
 namespace GameFoundation.Scripts.Features.InternetChecking.Services
 {
+    using System;
+    using System.Threading;
     using Cysharp.Threading.Tasks;
-    using UnityEngine;
     using UnityEngine.Events;
+
+    public enum ConnectivityChange
+    {
+        None,
+        Lost,
+        Restored,
+    }
 
     public class InternetCheckingService
     {
-        private int count                 = 0;
-        private int maxCountToFirmlyCheck = 3;
+        public const int MaxCountToFirmlyCheck = 3;
 
-        public async UniTask StartCheckingInternetAsync(UnityAction onNoInternet, UnityAction onHasInternet)
+        private static readonly TimeSpan SampleInterval = TimeSpan.FromSeconds(1);
+
+        private readonly IInternetReachability reachability;
+
+        private int count;
+
+        public InternetCheckingService(IInternetReachability reachability) { this.reachability = reachability; }
+
+        /// <summary>
+        /// Reads as offline regardless of the device state, so QA can rehearse the offline flow
+        /// on a connected device.
+        /// </summary>
+        public bool ForceOffline { get; set; }
+
+        /// <summary>The instantaneous reading, without the consecutive-sample debounce.</summary>
+        public bool IsOnline => !this.ForceOffline && this.reachability.IsReachable;
+
+        /// <summary>True from the sample that reported <see cref="ConnectivityChange.Lost"/> until the one that reported <see cref="ConnectivityChange.Restored"/>.</summary>
+        public bool IsFirmlyOffline { get; private set; }
+
+        /// <summary>
+        /// One polling step. A single failed reading is not trusted: the connection counts as lost
+        /// only after <see cref="MaxCountToFirmlyCheck"/> consecutive failures, and any online
+        /// reading before that resets the count.
+        /// </summary>
+        public ConnectivityChange Sample()
         {
-            if (this.CheckInternet())
-                this.count = 0;
-            else
-                this.count++;
-            if (this.count >= this.maxCountToFirmlyCheck)
+            if (this.IsOnline)
             {
                 this.count = 0;
-                onNoInternet?.Invoke();
-                await this.CheckConnectionAsync(onHasInternet);
+                if (!this.IsFirmlyOffline) return ConnectivityChange.None;
+
+                this.IsFirmlyOffline = false;
+                return ConnectivityChange.Restored;
             }
-            await UniTask.Delay(1000);
-            this.StartCheckingInternetAsync(onNoInternet, onHasInternet).Forget();
+
+            if (this.IsFirmlyOffline) return ConnectivityChange.None;
+            if (++this.count < MaxCountToFirmlyCheck) return ConnectivityChange.None;
+
+            this.count           = 0;
+            this.IsFirmlyOffline = true;
+            return ConnectivityChange.Lost;
         }
 
-        private async UniTask CheckConnectionAsync(UnityAction action)
+        /// <summary>
+        /// Samples once a second until <paramref name="cancellationToken"/> is cancelled. Runs one
+        /// loop per service: every loop shares the same consecutive-failure count.
+        /// </summary>
+        public async UniTask StartCheckingInternetAsync(UnityAction onNoInternet, UnityAction onHasInternet, CancellationToken cancellationToken = default)
         {
-            while (!this.CheckInternet())
+            while (!cancellationToken.IsCancellationRequested)
             {
-                await UniTask.Delay(1000);
-            }
-            action?.Invoke();
-        }
+                switch (this.Sample())
+                {
+                    case ConnectivityChange.Lost:
+                        onNoInternet?.Invoke();
+                        break;
+                    case ConnectivityChange.Restored:
+                        onHasInternet?.Invoke();
+                        break;
+                }
 
-        private bool CheckInternet() => Application.internetReachability != NetworkReachability.NotReachable;
+                // Real time, so a game that sets timeScale to 0 still notices a lost connection.
+                if (await UniTask.Delay(SampleInterval, DelayType.Realtime, cancellationToken: cancellationToken).SuppressCancellationThrow()) return;
+            }
+        }
     }
 }

@@ -54,6 +54,9 @@ namespace GameFoundation.Scripts
             builder.RegisterLocalData();
             builder.RegisterVibration();
             builder.RegisterInternetChecking();
+            #if INTERNET_REQUIRED
+            builder.RegisterInternetRequired();
+            #endif
             builder.RegisterUserExperience();
             builder.RegisterInventory();
             builder.RegisterProfile();
