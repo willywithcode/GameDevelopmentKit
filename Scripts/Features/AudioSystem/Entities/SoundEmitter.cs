@@ -96,7 +96,10 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Entities
             this.audioSource.Play();
             if (this.audioSource.loop) return;
 
-            await UniTask.WaitWhile(() => this.audioSource.isPlaying, cancellationToken: this.cancellationTokenSource.Token);
+            // A source destroyed mid-clip (e.g. its scene unloading) ends the wait instead of
+            // throwing, and a destroyed emitter has no pool to be handed back to.
+            await UniTask.WaitWhile(() => this.audioSource != null && this.audioSource.isPlaying, cancellationToken: this.cancellationTokenSource.Token);
+            if (this.audioSource == null) return;
             this.onPlayComplete?.Invoke();
             this.onPlayComplete = null;
         }
