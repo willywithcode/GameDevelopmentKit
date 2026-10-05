@@ -62,12 +62,12 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
                 throw new InvalidOperationException($"Can not resolve CSV blueprint reader '{blueprintType.FullName}'.");
             }
 
-            var rawCsv = this.LoadRawCsv(attribute);
+            var rawCsv = await this.LoadRawCsv(attribute);
             await blueprintReader.DeserializeFromCsv(rawCsv);
             this.loadedTypes.Add(blueprintType);
         }
 
-        private string LoadRawCsv(CsvBlueprintAttribute attribute)
+        private async UniTask<string> LoadRawCsv(CsvBlueprintAttribute attribute)
         {
             if (attribute.Source == CsvBlueprintSource.Resources)
             {
@@ -81,7 +81,9 @@ namespace GameFoundation.Scripts.Blueprints.CSV.Services
                 return textAsset.text;
             }
 
-            var addressableAsset = this.assetsManager.LoadAsset<TextAsset>(attribute.DataPath);
+            // Async load: a synchronous WaitForCompletion before Addressables is initialized
+            // never completes on Android (the catalog is read from the APK via UnityWebRequest).
+            var addressableAsset = await this.assetsManager.LoadAssetAsync<TextAsset>(attribute.DataPath);
             if (addressableAsset == null)
             {
                 throw new InvalidOperationException($"Can not load CSV blueprint from Addressables key '{attribute.DataPath}'.");
