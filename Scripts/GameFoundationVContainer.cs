@@ -19,6 +19,9 @@ namespace GameFoundation.Scripts
     using GameFoundation.Scripts.Features.NewDayReset.DI;
     using GameFoundation.Scripts.Features.Profile.DI;
     using GameFoundation.Scripts.Features.PushNotification.DI;
+    #if RATING
+    using GameFoundation.Scripts.Features.Rating.DI;
+    #endif
     using GameFoundation.Scripts.Features.UserExperience.DI;
     using GameFoundation.Scripts.Features.Vibration.DI;
     using GameFoundation.Scripts.LocalData.DI;
@@ -56,6 +59,9 @@ namespace GameFoundation.Scripts
             builder.RegisterInternetChecking();
             #if INTERNET_REQUIRED
             builder.RegisterInternetRequired();
+            #endif
+            #if RATING
+            builder.RegisterRating();
             #endif
             builder.RegisterUserExperience();
             builder.RegisterInventory();
