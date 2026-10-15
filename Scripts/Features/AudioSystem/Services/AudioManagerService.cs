@@ -46,9 +46,11 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         private SoundEmitter                          musicSource;
         private SoundEmitter                          prevMusicSource;  // held during crossfade
         private Dictionary<string, SoundEmitter>      sfxLoopEmitters = new();
-        private readonly Queue<(string id, bool isLoop)> musicQueue   = new();
+        private readonly Dictionary<string, float> sfxLoopVolumes = new();
+        private readonly Queue<(string id, bool isLoop, float volume)> musicQueue   = new();
 
         private float musicVolume = 0.75f;
+        private float musicCueVolume = 1f;
         private float sfxVolume   = 0.75f;
 
         public void Initialize()
@@ -59,18 +61,22 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         #region SFX
 
         public void PlaySfx(string audioId, bool isLoop = false)
+            => this.PlaySfxWithVolume(audioId, 1f, isLoop);
+
+        public void PlaySfxWithVolume(string audioId, float volume, bool isLoop = false)
         {
             var emitter = this.objectPooling.Spawn<SoundEmitter>("SoundEmitter");
             if (isLoop)
             {
                 if (this.sfxLoopEmitters.ContainsKey(audioId)) this.StopSfx(audioId);
                 this.sfxLoopEmitters.Add(audioId, emitter);
+                this.sfxLoopVolumes.Add(audioId, volume);
             }
 
             emitter.SetAudioClip(this.assetsManager.LoadAsset<AudioClip>(audioId))
                 .SetLoop(isLoop)
                 .SetMute(this.soundLocalDataService.IsSfxMute)
-                .SetVolume(this.soundLocalDataService.IsSfxMute ? 0 : this.sfxVolume)
+                .SetVolume(this.soundLocalDataService.IsSfxMute ? 0 : this.sfxVolume * volume)
                 .SetOnPlayComplete(() => this.objectPooling.Despawn(emitter))
                 .Play().Forget();
         }
@@ -99,6 +105,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
                 emitter.Stop();
                 this.objectPooling.Despawn(emitter);
                 this.sfxLoopEmitters.Remove(audioId);
+                this.sfxLoopVolumes.Remove(audioId);
             }
             else
             {
@@ -113,8 +120,8 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         public void SetSfxVolume(float volume)
         {
             this.sfxVolume = volume;
-            foreach (var emitter in this.sfxLoopEmitters.Values)
-                emitter.SetVolume(volume);
+            foreach (var pair in this.sfxLoopEmitters)
+                pair.Value.SetVolume(volume * this.sfxLoopVolumes[pair.Key]);
         }
 
         #endregion
@@ -122,20 +129,24 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
         #region Music
 
         public void PlayMusic(string audioId, bool force = false, bool isLoop = true)
+            => this.PlayMusicWithVolume(audioId, 1f, force, isLoop);
+
+        public void PlayMusicWithVolume(string audioId, float volume, bool force = false, bool isLoop = true)
         {
             this.musicSource ??= this.SpawnMusicEmitter();
 
             if (!force)
             {
-                this.musicQueue.Enqueue((audioId, isLoop));
+                this.musicQueue.Enqueue((audioId, isLoop, volume));
                 if (!this.musicSource.IsPlaying)
                 {
-                    var (id, loop) = this.musicQueue.Dequeue();
-                    this.PlayMusic(id, true, loop);
+                    var (id, loop, cueVolume) = this.musicQueue.Dequeue();
+                    this.PlayMusicWithVolume(id, cueVolume, true, loop);
                 }
                 return;
             }
 
+            this.musicCueVolume = volume;
             // Start silent then spring fade in
             this.musicSource.SetVolumeInstant(0);
             this.musicSource
@@ -145,13 +156,13 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
                 {
                     if (this.musicQueue.Count > 0)
                     {
-                        var (id, loop) = this.musicQueue.Dequeue();
-                        this.PlayMusic(id, false, loop);
+                        var (id, loop, cueVolume) = this.musicQueue.Dequeue();
+                        this.PlayMusicWithVolume(id, cueVolume, false, loop);
                     }
                 })
                 .Play().Forget();
 
-            this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : this.musicVolume);
+            this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : this.musicVolume * this.musicCueVolume);
         }
 
         public void StopMusic()
@@ -184,7 +195,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             if (this.musicSource == null) return;
 
             if (this.musicSource.HasFeelComponents)
-                this.musicSource.FadeVolumeTo(isMute ? 0 : this.musicVolume);
+                this.musicSource.FadeVolumeTo(isMute ? 0 : this.musicVolume * this.musicCueVolume);
             else
                 this.musicSource.SetMute(isMute);
         }
@@ -197,9 +208,9 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             if (this.musicSource == null) return;
 
             if (this.musicSource.HasFeelComponents)
-                this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : volume);
+                this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : volume * this.musicCueVolume);
             else
-                this.musicSource.SetVolume(volume);
+                this.musicSource.SetVolume(volume * this.musicCueVolume);
         }
 
         /// <summary>
@@ -244,6 +255,8 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
             this.prevMusicSource = this.musicSource;
             this.prevMusicSource?.FadeVolumeTo(0);
 
+            // Legacy crossfade starts a new cue at unit gain.
+            this.musicCueVolume = 1f;
             // Spawn and fade in new track
             this.musicSource = this.SpawnMusicEmitter();
             this.musicSource.SetVolumeInstant(0);
@@ -251,7 +264,7 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
                 .SetAudioClip(this.assetsManager.LoadAsset<AudioClip>(audioId))
                 .SetLoop(true)
                 .Play().Forget();
-            this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : this.musicVolume);
+            this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : this.musicVolume * this.musicCueVolume);
 
             // Clean up old source once crossfade completes
             await UniTask.Delay(TimeSpan.FromSeconds(duration));
@@ -263,10 +276,10 @@ namespace GameFoundation.Scripts.Features.AudioSystem.Services
 
         private async UniTaskVoid DuckMusicAsync(float targetVolume, float restoreDelay)
         {
-            this.musicSource.FadeVolumeTo(targetVolume);
+            this.musicSource.FadeVolumeTo(targetVolume * this.musicCueVolume);
             await UniTask.Delay(TimeSpan.FromSeconds(restoreDelay));
             if (this.musicSource == null) return;
-            this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : this.musicVolume);
+            this.musicSource.FadeVolumeTo(this.soundLocalDataService.IsMusicMute ? 0 : this.musicVolume * this.musicCueVolume);
         }
 
         private SoundEmitter SpawnMusicEmitter()
