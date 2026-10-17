@@ -34,31 +34,53 @@ MonoBehaviour:
     referenceMode: 2
     serializationDepthLimit: 64
     assemblyNames:
+    - ACTk.Examples.Genuine.Runtime
+    - ACTk.Examples.Runtime
+    - ACTk.Runtime
     - Animancer
     - Animancer.Examples
     - Animancer.FSM
     - Assembly-CSharp
+    - Autodesk.Fbx
+    - Autodesk.Fbx.BuildTestAssets
+    - BroAudio
     - Cinemachine
+    - CodeWriter.TutorialMaskForUGUI.Runtime
+    - Coffee.SoftMaskForUGUI
+    - Coffee.UIEffect
+    - Coffee.UIParticle
     - DOTween.Modules
     - EasySave3
     - ECM2
-    - Fenerax.JoystickPack
     - Game.Scripts
-    - Game.Scripts.Editor
     - GameFoundation.Scripts
     - GameFoundation.Scripts.DI
+    - LitMotion
+    - LitMotion.Animation
+    - LitMotion.Extensions
     - Lofelt.NiceVibrations
     - Lofelt.NiceVibrations.Demo
+    - MaxSdk.Scripts
+    - MCPForUnity.Runtime
     - MemoryPack.Unity
     - MoonSharp
     - MoreMountains.Tools
-    - PaperIO.Scripts
-    - PaperIO.Scripts.DI
+    - MysteryDumpling.Scripts
+    - MysteryDumpling.Scripts.Tests.PlayMode
     - R3.Unity
     - R3.Unity.TextMeshPro
     - R3.Unity.XRInteractionToolkit
+    - Sirenix.OdinInspector.Modules.Unity.Addressables
+    - spine-csharp
+    - spine-unity
+    - StompyRobot.SRDebugger
+    - StompyRobot.SRF
     - ThirdPartyService
     - ThirdPartyService.DI
+    - TMPEffects
+    - TMPEffects.NotifyObjectChanged
+    - TMPEffects.SerializedCollections
+    - TMPEffects.Timeline
     - UniTask
     - UniTask.Addressables
     - UniTask.DOTween
