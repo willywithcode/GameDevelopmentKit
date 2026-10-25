@@ -12,20 +12,10 @@ namespace GameFoundation.Scripts.Features.Rating.Services
     /// when it feels like it - at most three times a year per user - and reports neither the
     /// showing nor the rating. <see cref="ReviewFlowResult.Completed"/> means "asked".
     /// </para>
-    /// The store page needs the numeric Apple app id, which no API can derive from the bundle id,
-    /// so a project that wants the fallback passes it in. Without it the sheet still works and
-    /// <see cref="OpenStorePage"/> answers <c>false</c>.
     /// </summary>
     public class AppStoreRatingService : IRatingService
     {
-        private const string LogPrefix        = "[Rating]";
-        private const string ReviewUrlFormat  = "itms-apps://itunes.apple.com/app/id{0}?action=write-review";
-
-        private readonly string appleAppId;
-
-        public AppStoreRatingService() : this(string.Empty) { }
-
-        public AppStoreRatingService(string appleAppId) { this.appleAppId = appleAppId; }
+        private const string LogPrefix = "[Rating]";
 
 #if UNITY_IOS && !UNITY_EDITOR
 
@@ -67,16 +57,5 @@ namespace GameFoundation.Scripts.Features.Rating.Services
 
 #endif
 
-        public bool OpenStorePage()
-        {
-            if (string.IsNullOrWhiteSpace(this.appleAppId))
-            {
-                Debug.LogWarning($"{LogPrefix} No Apple app id was given, so the App Store page cannot be opened.");
-                return false;
-            }
-
-            Application.OpenURL(string.Format(ReviewUrlFormat, this.appleAppId));
-            return true;
-        }
     }
 }
