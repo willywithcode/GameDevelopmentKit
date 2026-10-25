@@ -26,10 +26,5 @@ namespace GameFoundation.Scripts.Features.Rating.Services
             return UniTask.FromResult(ReviewFlowResult.Unavailable);
         }
 
-        public bool OpenStorePage()
-        {
-            Debug.Log($"{LogPrefix} The store page was requested. This build has no store front, so nothing opens.");
-            return false;
-        }
     }
 }
